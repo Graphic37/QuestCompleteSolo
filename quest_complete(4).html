@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quest Complete</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+:root{--bg:#0b0b0f;--sf:rgba(16,16,22,.95);--bd:rgba(255,255,255,.06);--bd2:rgba(255,255,255,.11);--tx:#d4d0c8;--tx2:#8a8678;--tx3:#555048;--gd:#d4a843;--gn:#5a9a4a;--rd:#c04040;--bl:#5080b0;--pp:#9070b0;--fn:'IBM Plex Sans',sans-serif;--mn:'IBM Plex Mono',monospace;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--tx);font-family:var(--fn);overflow:hidden;height:100vh;width:100vw;user-select:none;font-size:14px;}
+canvas{display:block;position:absolute;top:0;left:0;}
+
+/* TOP BAR */
+#top{position:absolute;top:0;left:0;right:0;z-index:10;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:linear-gradient(180deg,rgba(11,11,15,.94),rgba(11,11,15,.5) 90%,transparent);pointer-events:none;}
+#top>*{pointer-events:auto;}
+.tg{display:flex;align-items:center;gap:20px;}
+.ts{display:flex;align-items:center;gap:7px;}
+.tl{font-size:12px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:1px;}
+.tv{font-family:var(--mn);font-size:16px;font-weight:500;}
+.tv.gd{color:var(--gd);}
+.bar{width:130px;height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;}
+.barf{height:100%;border-radius:3px;transition:width .2s;}
+.barf.xp{background:var(--gn);}
+.sep{width:1px;height:22px;background:var(--bd);}
+
+/* QUEST HUD */
+#qhud{position:absolute;top:62px;left:50%;transform:translateX(-50%);z-index:10;background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:12px 28px;text-align:center;pointer-events:none;max-width:500px;transition:opacity .3s;}
+#qhud.h{opacity:0;}
+.qhn{font-size:16px;font-weight:600;color:var(--tx);}
+.qhs{font-size:14px;color:var(--tx2);margin-top:3px;}
+
+/* DIALOGUE */
+#dlg{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);z-index:25;background:var(--sf);border:1px solid var(--bd2);border-radius:8px;padding:16px 26px;max-width:560px;width:92%;pointer-events:none;transition:opacity .3s,transform .3s;}
+#dlg.h{opacity:0;transform:translateX(-50%) translateY(8px);}
+.dw{font-size:12px;font-weight:600;color:var(--gd);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.dt{font-size:15px;color:var(--tx);line-height:1.5;}
+
+/* SIDE PANEL */
+#panel{position:absolute;right:0;top:0;bottom:0;width:380px;z-index:20;background:var(--sf);border-left:1px solid var(--bd);display:flex;flex-direction:column;transition:transform .25s;}
+#panel.h{transform:translateX(100%);}
+.pt{display:flex;border-bottom:1px solid var(--bd);flex-shrink:0;}
+.ptb{flex:1;padding:14px 0;text-align:center;font-size:13px;font-weight:600;color:var(--tx3);letter-spacing:.6px;text-transform:uppercase;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+.ptb:hover{color:var(--tx2);}
+.ptb.on{color:var(--tx);border-bottom-color:var(--gd);}
+.pb{flex:1;overflow-y:auto;padding:12px;}
+.pb::-webkit-scrollbar{width:4px;}
+.pb::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px;}
+
+/* QUEST CARDS */
+.qc{padding:14px 16px;margin-bottom:7px;border-radius:7px;cursor:pointer;background:rgba(255,255,255,.015);border:1px solid var(--bd);transition:all .15s;}
+.qc:hover{background:rgba(255,255,255,.035);border-color:var(--bd2);}
+.qc.on{border-color:var(--gd);background:rgba(212,168,67,.03);}
+.qc.dn{opacity:.3;}
+.qc.lk{opacity:.2;cursor:default;}
+.qcn{font-size:15px;font-weight:600;margin-bottom:4px;}
+.qcd{font-size:13px;color:var(--tx2);line-height:1.4;margin-bottom:6px;}
+.qcr{display:flex;justify-content:space-between;align-items:center;}
+.qtg{font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;padding:3px 10px;border-radius:3px;}
+.tM{background:rgba(212,168,67,.1);color:var(--gd);}
+.tS{background:rgba(80,128,176,.1);color:var(--bl);}
+.tB{background:rgba(192,64,64,.1);color:var(--rd);}
+.tG{background:rgba(90,154,74,.1);color:var(--gn);}
+.qlv{font-family:var(--mn);font-size:12px;color:var(--gn);}
+.qrw{font-family:var(--mn);font-size:12px;color:var(--gd);}
+
+.stp{font-size:13px;padding:4px 0 4px 14px;display:flex;align-items:center;gap:7px;}
+.si{width:16px;text-align:center;flex-shrink:0;}
+.stp.d{color:var(--gn);}
+.stp.c{color:var(--gd);}
+.stp.t{color:var(--tx3);}
+.pe{padding:20px 10px;font-size:14px;color:var(--tx3);}
+
+/* Quest sub-tabs */
+.q-subs{display:flex;gap:0;margin-bottom:10px;border-bottom:1px solid var(--bd);}
+.q-sub{flex:1;padding:8px 0;text-align:center;font-size:11px;font-weight:600;color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s;text-transform:uppercase;letter-spacing:.5px;}
+.q-sub:hover{color:var(--tx2);}
+.q-sub.on{color:var(--tx);border-bottom-color:var(--gd);}
+
+/* SKILL TREE */
+.cat-hd{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:1.2px;padding:14px 4px 6px;display:flex;align-items:center;gap:8px;}
+.cat-hd::after{content:'';flex:1;height:1px;background:var(--bd);}
+.sk{padding:10px 14px;margin-bottom:5px;border-radius:6px;background:rgba(255,255,255,.015);border:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:all .15s;}
+.sk:hover{background:rgba(255,255,255,.04);border-color:var(--bd2);}
+.sk.cant{opacity:.2;cursor:default;pointer-events:none;}
+.sk.has{border-color:rgba(90,154,74,.25);background:rgba(90,154,74,.03);cursor:default;}
+.skl{flex:1;min-width:0;}
+.skn{font-size:13px;font-weight:600;}
+.skd{font-size:11px;color:var(--tx2);margin-top:2px;}
+.skp{font-family:var(--mn);font-size:13px;font-weight:600;color:var(--gd);margin-left:12px;white-space:nowrap;}
+.skp.owned{color:var(--gn);}
+
+.lrc .qcn{color:var(--pp);}
+.lrc .qcd{color:rgba(170,150,190,.5);}
+
+/* Custom Tooltip */
+.sn-tip{position:absolute;top:calc(100% + 14px);left:50%;transform:translateX(-50%);background:rgba(14,14,20,.98);border:1px solid var(--bd2);border-radius:8px;padding:12px 16px;width:195px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:50;box-shadow:0 8px 28px rgba(0,0,0,.6);}
+.sn:hover .sn-tip{opacity:1;}
+/* Shift tooltip right when near left edge */
+.str-row .sn:first-child .sn-tip{left:0;transform:translateX(0);}
+.str-row .sn:first-child .sn-tip::before{left:24px;transform:none;}
+/* Shift tooltip left when near right edge */
+.str-row .sn:last-child .sn-tip{left:auto;right:0;transform:translateX(0);}
+.str-row .sn:last-child .sn-tip::before{left:auto;right:24px;transform:none;}
+/* Keep centered for middle/solo nodes */
+.str-row .sn:only-child .sn-tip{left:50%;right:auto;transform:translateX(-50%);}
+.str-row .sn:only-child .sn-tip::before{left:50%;right:auto;transform:translateX(-50%);}
+.sn-tip-name{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:4px;}
+.sn-tip-desc{font-size:12px;color:var(--tx2);line-height:1.4;margin-bottom:6px;}
+.sn-tip-cost{font-family:var(--mn);font-size:12px;color:#6ab0d0;}
+.sn-tip-cost.owned{color:var(--gn);}
+.sn-tip-req{font-size:11px;color:var(--rd);margin-top:4px;}
+.sn-tip::before{content:'';position:absolute;bottom:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-bottom-color:rgba(14,14,20,.98);}
+
+/* Relic Cards */
+.relic{padding:16px 18px;border-radius:8px;border:1px solid rgba(212,168,67,.15);background:rgba(212,168,67,.03);margin-bottom:8px;}
+.relic.locked{border-color:var(--bd);background:rgba(255,255,255,.015);opacity:.4;}
+.relic-head{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.relic-ico{font-size:28px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.2);border-radius:8px;}
+.relic.locked .relic-ico{background:rgba(255,255,255,.03);border-color:var(--bd);}
+.relic-info{flex:1;}
+.relic-name{font-size:15px;font-weight:600;color:var(--gd);}
+.relic.locked .relic-name{color:var(--tx3);}
+.relic-tag{font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.8px;margin-top:2px;}
+.relic-desc{font-size:13px;color:var(--tx2);line-height:1.5;}
+.relic-effect{font-size:12px;color:var(--gn);margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.04);}
+.relic-stack{font-size:11px;color:#6ab0d0;margin-top:4px;font-family:var(--mn);}
+
+/* Collection Log */
+.col-section{margin-bottom:20px;}
+.col-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 6px 8px;}
+.col-hdr-name{font-size:14px;font-weight:700;color:var(--tx);letter-spacing:.5px;}
+.col-hdr-count{font-family:var(--mn);color:var(--gd);font-size:13px;font-weight:500;}
+.col-bar{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin:0 6px 12px;}
+.col-bar-fill{height:100%;border-radius:2px;background:var(--gd);transition:width .3s;}
+.col-bar-top{height:5px;margin:0 4px 18px;border-radius:3px;}
+.col-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:0 4px;}
+.col-item{aspect-ratio:1;border-radius:8px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);display:flex;align-items:center;justify-content:center;position:relative;cursor:default;transition:all .15s;}
+.col-item:hover{border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.04);}
+.col-item .col-num{font-family:var(--mn);font-size:12px;font-weight:500;color:var(--tx3);}
+.col-item .col-ico{font-size:20px;}
+.col-item.got{border-color:rgba(212,168,67,.2);background:rgba(212,168,67,.03);}
+.col-item.got .col-num{color:var(--gn);font-weight:700;}
+.col-item.miss{opacity:.5;}
+.col-item.miss:hover{opacity:.8;}
+
+/* Collection Tooltip — fixed position, always visible */
+.col-tip{position:fixed;background:rgba(10,10,16,.98);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px 16px;width:220px;pointer-events:none;opacity:0;transition:opacity .1s;z-index:999;box-shadow:0 12px 36px rgba(0,0,0,.7);}
+.col-item:hover .col-tip{opacity:1;}
+.col-tip-name{font-size:14px;font-weight:700;color:var(--tx);margin-bottom:4px;line-height:1.3;}
+.col-tip-desc{font-size:12px;color:var(--tx2);line-height:1.5;margin-bottom:6px;}
+.col-tip-divider{height:1px;background:rgba(255,255,255,.06);margin:6px 0;}
+.col-tip-status{font-size:11px;font-weight:600;letter-spacing:.3px;}
+.col-tip-status.done{color:var(--gn);}
+.col-tip-status.avail{color:var(--gd);}
+.col-tip-status.miss{color:var(--tx3);}
+.col-tip-effect{font-size:11px;color:var(--gn);margin-top:4px;}
+
+/* Merchant Prompt */
+#merchant-prompt{position:absolute;bottom:110px;left:50%;transform:translateX(-50%);z-index:22;background:var(--sf);border:1px solid rgba(212,168,67,.25);border-radius:8px;padding:10px 22px;font-size:14px;font-weight:500;color:var(--gd);pointer-events:none;transition:opacity .2s;white-space:nowrap;}
+#merchant-prompt.h{opacity:0;}
+#merchant-prompt span{font-weight:700;border:1px solid rgba(212,168,67,.3);padding:2px 8px;border-radius:4px;margin:0 4px;font-size:13px;}
+
+/* Merchant Shop Overlay */
+#shop{position:fixed;inset:0;z-index:46;display:flex;align-items:center;justify-content:center;transition:opacity .2s,visibility .2s;}
+#shop.h{opacity:0;visibility:hidden;pointer-events:none;}
+.shop-bg{position:absolute;inset:0;background:rgba(0,0,0,.8);}
+.shop-panel{position:relative;width:800px;max-width:94vw;max-height:88vh;background:linear-gradient(180deg,#14141e,#0e0e14);border:1px solid rgba(212,168,67,.12);border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6);}
+.shop-top{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--bd);}
+.shop-title{font-size:22px;font-weight:700;color:var(--gd);letter-spacing:1px;}
+.shop-gold{font-family:var(--mn);font-size:18px;color:var(--gd);}
+.shop-x{background:none;border:1px solid var(--bd);color:var(--tx2);width:36px;height:36px;font-size:18px;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.shop-x:hover{background:rgba(255,255,255,.06);color:var(--tx);}
+.shop-tabs{display:flex;border-bottom:1px solid var(--bd);}
+.shop-tab{flex:1;padding:12px;text-align:center;font-size:13px;font-weight:600;color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;text-transform:uppercase;letter-spacing:.6px;}
+.shop-tab:hover{color:var(--tx2);}
+.shop-tab.on{color:var(--gd);border-bottom-color:var(--gd);}
+.shop-body{flex:1;overflow-y:auto;padding:16px 20px;}
+.shop-body::-webkit-scrollbar{width:4px;}
+.shop-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.06);border-radius:2px;}
+
+/* Shop relic items */
+.sr{display:flex;align-items:center;gap:16px;padding:16px;margin-bottom:8px;border-radius:10px;border:1px solid var(--bd);background:rgba(255,255,255,.015);transition:all .15s;}
+.sr:hover{background:rgba(255,255,255,.03);border-color:var(--bd2);}
+.sr-ico{width:56px;height:56px;border-radius:8px;background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.15);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;}
+.sr-info{flex:1;min-width:0;}
+.sr-name{font-size:15px;font-weight:600;color:var(--tx);margin-bottom:3px;}
+.sr-desc{font-size:12px;color:var(--tx2);line-height:1.4;margin-bottom:4px;}
+.sr-effect{font-size:11px;color:var(--gn);}
+.sr-right{text-align:right;flex-shrink:0;}
+.sr-price{font-family:var(--mn);font-size:16px;font-weight:600;color:var(--gd);margin-bottom:6px;}
+.sr-btn{background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.25);color:var(--gd);padding:6px 18px;font-family:var(--fn);font-size:12px;font-weight:600;cursor:pointer;border-radius:5px;transition:all .15s;}
+.sr-btn:hover{background:rgba(212,168,67,.15);}
+.sr-btn.sell{background:rgba(90,154,74,.08);border-color:rgba(90,154,74,.25);color:var(--gn);}
+.sr-btn.sell:hover{background:rgba(90,154,74,.15);}
+.sr-btn.cant{opacity:.3;pointer-events:none;}
+.sr-owned{font-size:11px;color:var(--tx3);font-weight:500;}
+
+/* TOGGLE */
+#tog{position:absolute;right:388px;top:50%;transform:translateY(-50%);z-index:25;width:28px;height:44px;background:var(--sf);border:1px solid var(--bd);border-right:none;border-radius:6px 0 0 6px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--tx3);font-size:12px;transition:right .25s;}
+#tog:hover{color:var(--tx);}
+
+/* LOG */
+#log{position:absolute;left:0;bottom:0;width:380px;max-height:170px;z-index:15;padding:10px 16px;overflow-y:auto;pointer-events:none;mask-image:linear-gradient(transparent,black 25%);-webkit-mask-image:linear-gradient(transparent,black 25%);}
+#log::-webkit-scrollbar{display:none;}
+.le{font-size:13px;padding:2px 0;animation:li .2s;}
+.le.lr{color:var(--pp);}
+.le.cb{color:var(--rd);}
+.le.rw{color:var(--gd);}
+.le.tv{color:var(--bl);}
+.le.qt{color:var(--gn);}
+.le.sy{color:var(--tx3);}
+@keyframes li{from{opacity:0;transform:translateY(4px);}to{opacity:1;}}
+
+/* NOTIFS */
+#nfs{position:absolute;top:110px;left:50%;transform:translateX(-50%);z-index:30;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:8px;}
+.nf{background:var(--sf);border:1px solid var(--bd2);border-radius:8px;padding:14px 32px;text-align:center;animation:nI .3s ease forwards,nO .3s ease 2.8s forwards;}
+.nft{font-size:18px;font-weight:700;color:var(--gd);}
+.nfs{font-size:14px;color:var(--tx2);margin-top:3px;max-width:400px;}
+.nf.tw .nft{color:var(--tx);}
+.nf.lo .nft{color:var(--pp);font-size:15px;}
+@keyframes nI{from{opacity:0;transform:translateY(-8px) scale(.95);}to{opacity:1;transform:scale(1);}}
+@keyframes nO{from{opacity:1;}to{opacity:0;}}
+
+/* BOTTOM */
+#bot{position:absolute;bottom:0;left:0;right:0;z-index:15;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:linear-gradient(0deg,rgba(11,11,15,.9),rgba(11,11,15,.35) 88%,transparent);pointer-events:none;}
+#bot>*{pointer-events:auto;}
+.bg{display:flex;align-items:center;gap:10px;}
+.sb{background:rgba(255,255,255,.04);border:1px solid var(--bd);color:var(--tx3);padding:6px 12px;font-family:var(--mn);font-size:13px;cursor:pointer;border-radius:5px;transition:all .15s;}
+.sb:hover{color:var(--tx);}
+.sb.on{color:var(--gd);border-color:rgba(212,168,67,.2);}
+.hint{font-size:13px;color:var(--tx3);pointer-events:none;}
+
+/* MINIMAP */
+#mm{position:absolute;bottom:58px;left:16px;width:180px;height:180px;z-index:15;border:1px solid var(--bd2);border-radius:8px;overflow:hidden;background:#09090c;}
+#mm canvas{width:100%;height:100%;}
+#blbl{position:absolute;bottom:244px;left:16px;z-index:15;font-size:11px;font-weight:500;color:var(--tx3);letter-spacing:1px;text-transform:uppercase;pointer-events:none;}
+
+/* START */
+#start{position:absolute;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s;}
+#start.gone{opacity:0;pointer-events:none;}
+#start h1{font-size:42px;font-weight:700;color:var(--tx);letter-spacing:2px;}
+#start h1 span{color:var(--gd);}
+#start p{font-size:15px;color:var(--tx2);margin:8px 0 6px;}
+#start .sub{font-size:12px;color:var(--tx3);margin-bottom:28px;}
+#start button{background:rgba(212,168,67,.08);border:1px solid rgba(212,168,67,.25);color:var(--gd);padding:14px 48px;font-family:var(--fn);font-size:16px;font-weight:600;cursor:pointer;border-radius:6px;transition:all .2s;}
+#start button:hover{background:rgba(212,168,67,.15);}
+
+/* STATS FOOTER */
+#stats{position:absolute;bottom:58px;right:388px;z-index:15;font-size:11px;color:var(--tx3);text-align:right;pointer-events:none;transition:right .25s;}
+
+/* FULL MAP */
+#fmap{position:fixed;inset:0;z-index:42;display:flex;align-items:center;justify-content:center;transition:opacity .2s,visibility .2s;}
+#fmap.h{opacity:0;visibility:hidden;pointer-events:none;}
+.fmap-bg{position:absolute;inset:0;background:rgba(0,0,0,.82);}
+.fmap-wrap{position:relative;width:96vw;height:94vh;background:#08080c;border:1px solid var(--bd2);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;}
+.fmap-top{display:flex;align-items:center;justify-content:space-between;padding:12px 22px;border-bottom:1px solid var(--bd);flex-shrink:0;}
+.fmap-title{font-size:18px;font-weight:700;color:var(--tx);letter-spacing:2px;}
+.fmap-hint{font-size:12px;color:var(--tx3);}
+.fmap-body{flex:1;position:relative;overflow:hidden;}
+.fmap-body canvas{position:absolute;top:0;left:0;width:100%;height:100%;}
+
+/* SKILL TREE OVERLAY */
+#stree{position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;transition:opacity .25s,visibility .25s;}
+#stree.str-hide{opacity:0;visibility:hidden;pointer-events:none;}
+.str-bg{position:absolute;inset:0;background:rgba(0,0,0,.75);}
+.str-panel{position:relative;width:96vw;max-width:1400px;height:92vh;max-height:960px;background:linear-gradient(180deg,#13131c 0%,#0e0e14 100%);border:1px solid rgba(255,255,255,.08);border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 100px rgba(0,0,0,.7);}
+.str-top{display:flex;align-items:center;justify-content:space-between;padding:20px 32px;border-bottom:1px solid rgba(255,255,255,.06);}
+.str-title{font-size:24px;font-weight:700;color:var(--tx);letter-spacing:3px;}
+.str-gold{font-family:var(--mn);font-size:20px;color:#6ab0d0;}
+.str-x{background:none;border:1px solid rgba(255,255,255,.1);color:var(--tx2);width:38px;height:38px;font-size:18px;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.str-x:hover{background:rgba(255,255,255,.06);color:var(--tx);}
+.str-cols{flex:1;display:flex;gap:0;overflow-y:auto;overflow-x:visible;padding:8px 0 0;}
+.str-cols::-webkit-scrollbar{width:5px;}
+.str-cols::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px;}
+.str-tip{text-align:center;padding:14px;font-size:14px;color:var(--tx3);border-top:1px solid rgba(255,255,255,.04);}
+.str-btn{color:var(--pp) !important;border-color:rgba(144,112,176,.2) !important;}
+.str-btn:hover{border-color:rgba(144,112,176,.4) !important;}
+
+/* Columns */
+.str-col{flex:1;display:flex;flex-direction:column;align-items:center;padding:28px 16px 80px;position:relative;border-right:1px solid rgba(255,255,255,.04);overflow:visible;}
+.str-col:last-child{border-right:none;}
+.str-col-title{font-size:16px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:24px;padding:6px 22px;border:1px solid;border-radius:5px;}
+.str-col.dmg .str-col-title{color:#e05050;border-color:rgba(224,80,80,.3);text-shadow:0 0 14px rgba(224,80,80,.25);}
+.str-col.mob .str-col-title{color:#50c878;border-color:rgba(80,200,120,.3);text-shadow:0 0 14px rgba(80,200,120,.25);}
+.str-col.util .str-col-title{color:#c080ff;border-color:rgba(192,128,255,.3);text-shadow:0 0 14px rgba(192,128,255,.25);}
+.str-col.dmg{border-color:rgba(224,80,80,.06);}
+.str-col.mob{border-color:rgba(80,200,120,.06);}
+.str-col.util{border-color:rgba(192,128,255,.06);}
+
+/* Nodes */
+.str-nodes{display:flex;flex-direction:column;align-items:center;gap:0;width:100%;position:relative;overflow:visible;}
+.str-row{display:flex;justify-content:center;gap:16px;margin-bottom:8px;position:relative;overflow:visible;}
+.sn{width:72px;height:72px;border-radius:10px;border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;position:relative;}
+.sn:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.2);transform:scale(1.06);}
+.sn .sn-ico{font-size:26px;line-height:1;}
+.sn .sn-cost{font-family:var(--mn);font-size:11px;color:#6ab0d0;margin-top:3px;}
+.sn .sn-name{font-size:10px;font-weight:600;color:var(--tx2);position:absolute;bottom:-18px;white-space:nowrap;text-align:center;width:100px;left:50%;transform:translateX(-50%);overflow:hidden;text-overflow:ellipsis;}
+.sn .sn-line{position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);width:2px;height:9px;background:rgba(255,255,255,.08);}
+
+/* States */
+.sn.locked{opacity:.2;cursor:default;}
+.sn.locked:hover{transform:none;background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.1);}
+.sn.avail{border-color:rgba(255,255,255,.2);}
+.sn.afford{border-color:rgba(106,176,208,.45);box-shadow:0 0 16px rgba(106,176,208,.1);}
+.sn.afford:hover{border-color:rgba(106,176,208,.7);box-shadow:0 0 24px rgba(106,176,208,.18);}
+.sn.has{cursor:default;}
+.sn.has:hover{transform:none;}
+.str-col.dmg .sn.has{border-color:rgba(224,80,80,.55);background:rgba(224,80,80,.12);box-shadow:0 0 20px rgba(224,80,80,.15);}
+.str-col.mob .sn.has{border-color:rgba(80,200,120,.55);background:rgba(80,200,120,.12);box-shadow:0 0 20px rgba(80,200,120,.15);}
+.str-col.util .sn.has{border-color:rgba(192,128,255,.55);background:rgba(192,128,255,.12);box-shadow:0 0 20px rgba(192,128,255,.15);}
+.sn.has .sn-ico{filter:brightness(1.3);}
+.sn.has .sn-cost{color:var(--gn);font-size:12px;}
+.str-conn{width:2px;height:12px;background:rgba(255,255,255,.06);margin:0 auto 3px;}
+.str-col.dmg .str-conn.lit{background:rgba(224,80,80,.3);}
+.str-col.mob .str-conn.lit{background:rgba(80,200,120,.3);}
+.str-col.util .str-conn.lit{background:rgba(192,128,255,.3);}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="start">
+  <h1>QUEST <span>COMPLETE</span></h1>
+  <p>An incremental open-world questing adventure</p>
+  <div class="sub">Complete your first quest to unlock AUTO · Earn gold · Buy upgrades · Watch your hero grow</div>
+  <button onclick="go()">Start Game</button>
+</div>
+
+<div id="top">
+  <div class="tg">
+    <div class="ts"><span class="tl">Lv</span><span class="tv" id="hLv">1</span></div>
+    <div class="ts"><span class="tl">XP</span><div class="bar"><div class="barf xp" id="hXp"></div></div><span class="tv" style="font-size:11px;color:var(--tx3)" id="hXpT"></span></div>
+  </div>
+  <div class="tg">
+    <div class="ts"><span class="tv gd" id="hGd">0</span><span class="tl" style="color:var(--gd)">gold</span></div>
+    <div class="sep"></div>
+    <div class="ts"><span class="tl">ATK</span><span class="tv" id="hA">5</span></div>
+    <div class="ts"><span class="tl">SPD</span><span class="tv" id="hS">1.0</span></div>
+    <div class="ts"><span class="tl">Quests</span><span class="tv" id="hQ">0</span></div>
+  </div>
+</div>
+
+<div id="qhud" class="h"><div class="qhn" id="qhn"></div><div class="qhs" id="qhs"></div></div>
+<div id="dlg" class="h"><div class="dw" id="dW"></div><div class="dt" id="dT"></div></div>
+
+<!-- Merchant Prompt -->
+<div id="merchant-prompt" class="h">Press <span>E</span> to trade</div>
+
+<!-- Merchant Shop -->
+<div id="shop" class="h">
+  <div class="shop-bg" onclick="closeShop()"></div>
+  <div class="shop-panel">
+    <div class="shop-top">
+      <div class="shop-title">Merchant</div>
+      <div class="shop-gold">⬥ <span id="shopGold">0</span> gold</div>
+      <button class="shop-x" onclick="closeShop()">✕</button>
+    </div>
+    <div class="shop-tabs">
+      <div class="shop-tab on" data-st="buy" onclick="shopTab(this)">Buy Relics</div>
+      <div class="shop-tab" data-st="sell" onclick="shopTab(this)">Sell Relics</div>
+    </div>
+    <div class="shop-body" id="shopBody"></div>
+  </div>
+</div>
+
+<div id="panel" class="h">
+  <div class="pt">
+    <div class="ptb on" data-t="quests" onclick="stab(this)">Quests</div>
+    <div class="ptb" data-t="relics" onclick="stab(this)">Relics</div>
+    <div class="ptb" data-t="collection" onclick="stab(this)">Collection</div>
+  </div>
+  <div class="pb" id="pbody"></div>
+</div>
+<div id="tog" onclick="togP()">◂</div>
+
+<!-- FULL MAP -->
+<div id="fmap" class="h">
+  <div class="fmap-bg" onclick="closeMap()"></div>
+  <div class="fmap-wrap">
+    <div class="fmap-top">
+      <div class="fmap-title">WORLD MAP</div>
+      <div class="fmap-hint">Press M or ESC to close</div>
+    </div>
+    <div class="fmap-body"><canvas id="fmc"></canvas></div>
+  </div>
+</div>
+
+<!-- SKILL TREE -->
+<div id="stree" class="str-hide">
+  <div class="str-bg" onclick="closeTree()"></div>
+  <div class="str-panel">
+    <div class="str-top">
+      <div class="str-title">SKILL TREE</div>
+      <div class="str-gold">◆ <span id="stSp">0</span> Skill Points</div>
+      <button class="str-x" onclick="closeTree()">✕</button>
+    </div>
+    <div class="str-cols" id="strCols"></div>
+    <div class="str-tip" id="strTip">Click a skill to unlock it</div>
+  </div>
+</div>
+
+<div id="log"></div>
+<div id="nfs"></div>
+
+<div id="bot">
+  <div class="bg">
+    <button class="sb on" onclick="setSp(1)" id="sp1">1×</button>
+    <button class="sb" onclick="setSp(2)" id="sp2">2×</button>
+    <button class="sb" onclick="setSp(4)" id="sp4">4×</button>
+    <div style="width:1px;height:18px;background:var(--bd);margin:0 4px"></div>
+    <button class="sb str-btn" onclick="openTree()">⬦ Skills</button>
+  </div>
+  <div class="bg">
+    <span class="hint" id="cHint">WASD / Arrows to move</span>
+    <button class="sb" id="bPick" onclick="manPick()" style="color:var(--gd)">Pick Quest ▸</button>
+  </div>
+</div>
+
+<div id="mm"><canvas id="mmc" width="180" height="180"></canvas></div>
+<div id="blbl"></div>
+<div id="stats"></div>
+
+<script>
+const C=document.getElementById('game'),X=C.getContext('2d');
+const MC=document.getElementById('mmc'),MX=MC.getContext('2d');
+let W,H;function rz(){W=C.width=innerWidth;H=C.height=innerHeight;}rz();addEventListener('resize',rz);
+const WW=6400,WH=5200,cam={x:0,y:0};
+let gsp=1,gt=0,on=false;
+function setSp(s){gsp=s;document.querySelectorAll('#bot .sb').forEach(b=>b.classList.remove('on'));document.getElementById('sp'+s).classList.add('on');}
+
+// ═══ PLAYER ═══
+const P={x:900,y:2600,lv:1,xp:0,xpN:80,gold:0,sp:0,atk:5,def:1,ang:0,mv:false,tx:0,ty:0,kills:0,qd:0,
+  atkSpd:1,crit:0,critDmg:1.5,multi:0,goldB:0,xpB:0,dlgSpd:1,moveSpd:1,regen:1,hp:100,maxHp:100,
+  autoQ:false,autoUp:false,combatRange:30,aoe:0,lifesteal:0,questRadar:0,_expl:0};
+
+// ═══ SKILL TREE ═══
+const SKILLS=[
+  // ── DAMAGE (22 skills, 9 tiers) ──
+  {id:'d1',n:'Sharp Edge',d:'+3 ATK',cost:1,req:null,cat:'dmg',fn:()=>{P.atk+=3},row:0,ico:'🗡'},
+  {id:'d2',n:'Heavy Strikes',d:'+5 ATK',cost:1,req:'d1',cat:'dmg',fn:()=>{P.atk+=5},row:1,ico:'⚔'},
+  {id:'d3',n:'Quick Hands',d:'+25% ATK Spd',cost:1,req:'d1',cat:'dmg',fn:()=>{P.atkSpd+=.25},row:1,ico:'✋'},
+  {id:'d4',n:'Keen Eye',d:'+12% Crit',cost:1,req:'d1',cat:'dmg',fn:()=>{P.crit+=.12},row:1,ico:'👁'},
+  {id:'d8',n:'Enchanted Blade',d:'+10 ATK',cost:1,req:'d2',cat:'dmg',fn:()=>{P.atk+=10},row:2,ico:'✦'},
+  {id:'d5',n:'Lethal Precision',d:'+15% Crit +50% CrtDmg',cost:1,req:'d4',cat:'dmg',fn:()=>{P.crit+=.15;P.critDmg+=.5},row:2,ico:'🎯'},
+  {id:'d6',n:'Double Strike',d:'12% hit twice',cost:1,req:'d3',cat:'dmg',fn:()=>{P.multi+=.12},row:2,ico:'⚡'},
+  {id:'d12',n:'Cleave',d:'Hit all nearby',cost:2,req:'d8',cat:'dmg',fn:()=>{P.aoe=1},row:3,ico:'💥'},
+  {id:'d13',n:'Lifesteal',d:'Heal 15% dmg',cost:2,req:'d8',cat:'dmg',fn:()=>{P.lifesteal=.15},row:3,ico:'❤'},
+  {id:'d9',n:'Assassin Arts',d:'+20% Crit +100% CrtDmg',cost:2,req:'d5',cat:'dmg',fn:()=>{P.crit+=.2;P.critDmg+=1},row:3,ico:'🗡'},
+  {id:'d7',n:'Flurry',d:'+40% ATK Spd',cost:2,req:'d3',cat:'dmg',fn:()=>{P.atkSpd+=.4},row:3,ico:'🌀'},
+  {id:'d10',n:'Triple Strike',d:'+18% Multi-hit',cost:2,req:'d6',cat:'dmg',fn:()=>{P.multi+=.18},row:3,ico:'⚡'},
+  {id:'d14',n:'Starfall Blade',d:'+20 ATK',cost:2,req:'d12',cat:'dmg',fn:()=>{P.atk+=20},row:4,ico:'⭐'},
+  {id:'d11',n:'Berserk',d:'+60% ATK Spd',cost:2,req:'d7',cat:'dmg',fn:()=>{P.atkSpd+=.6},row:4,ico:'🔥'},
+  {id:'d16',n:'Bloodthirst',d:'Lifesteal +25%',cost:2,req:'d13',cat:'dmg',fn:()=>{P.lifesteal+=.25},row:4,ico:'🩸'},
+  {id:'d17',n:'Executioner',d:'+35% Crit Dmg',cost:2,req:'d9',cat:'dmg',fn:()=>{P.critDmg+=.35},row:4,ico:'⚰'},
+  {id:'d18',n:'Warlord',d:'+30 ATK +20% Spd',cost:3,req:'d14',cat:'dmg',fn:()=>{P.atk+=30;P.atkSpd+=.2},row:5,ico:'👑'},
+  {id:'d19',n:'Storm of Blades',d:'+30% Multi-hit',cost:3,req:'d10',cat:'dmg',fn:()=>{P.multi+=.3},row:5,ico:'🌪'},
+  {id:'d20',n:'Fury Incarnate',d:'+100% ATK Spd',cost:3,req:'d11',cat:'dmg',fn:()=>{P.atkSpd+=1},row:5,ico:'💢'},
+  {id:'d15',n:'Godslayer',d:'+50 ATK +30% Crit 2x Spd',cost:3,req:'d18',cat:'dmg',fn:()=>{P.atk+=50;P.crit+=.3;P.atkSpd*=2},row:6,ico:'💀'},
+  {id:'d21',n:'Eternal Edge',d:'+80 ATK +50% CrtDmg',cost:4,req:'d15',cat:'dmg',fn:()=>{P.atk+=80;P.critDmg+=.5},row:7,ico:'♾'},
+  {id:'d22',n:'Annihilator',d:'All damage x1.5',cost:5,req:'d21',cat:'dmg',fn:()=>{P.atk=Math.floor(P.atk*1.5)},row:8,ico:'☠'},
+  // ── MOBILITY (14 skills) ──
+  {id:'m1',n:'Swift Boots',d:'+20% Move Spd',cost:1,req:null,cat:'mob',fn:()=>{P.moveSpd+=.2},row:0,ico:'👟'},
+  {id:'m6',n:'Quest Compass',d:'Brighter markers',cost:1,req:null,cat:'mob',fn:()=>{P.questRadar=1},row:0,ico:'🧭'},
+  {id:'m5',n:'Extended Reach',d:'+50% Combat Range',cost:1,req:'m1',cat:'mob',fn:()=>{P.combatRange*=1.5},row:1,ico:'🤚'},
+  {id:'m2',n:'Wind Runner',d:'+25% Move Spd',cost:1,req:'m1',cat:'mob',fn:()=>{P.moveSpd+=.25},row:1,ico:'💨'},
+  {id:'m7',n:'Pathfinder',d:'+15% Move Spd',cost:1,req:'m2',cat:'mob',fn:()=>{P.moveSpd+=.15},row:2,ico:'🗺'},
+  {id:'m3',n:'Gale Force',d:'+35% Move Spd',cost:1,req:'m2',cat:'mob',fn:()=>{P.moveSpd+=.35},row:2,ico:'🌪'},
+  {id:'m4',n:'Teleport Steps',d:'+50% Move Spd',cost:2,req:'m3',cat:'mob',fn:()=>{P.moveSpd+=.5},row:3,ico:'✨'},
+  {id:'m9',n:'Long Arm',d:'+80% Combat Range',cost:2,req:'m5',cat:'mob',fn:()=>{P.combatRange*=1.8},row:3,ico:'🦾'},
+  {id:'m8',n:'Lightfoot',d:'+80% Move Spd',cost:2,req:'m4',cat:'mob',fn:()=>{P.moveSpd+=.8},row:4,ico:'⚡'},
+  {id:'m10',n:'Phase Walker',d:'+100% Move Spd',cost:3,req:'m8',cat:'mob',fn:()=>{P.moveSpd+=1},row:5,ico:'👻'},
+  {id:'m11',n:'Warp Strike',d:'+120% Combat Range',cost:3,req:'m9',cat:'mob',fn:()=>{P.combatRange*=2.2},row:5,ico:'🎯'},
+  {id:'m12',n:'Sonic',d:'+200% Move Spd',cost:3,req:'m10',cat:'mob',fn:()=>{P.moveSpd+=2},row:6,ico:'💫'},
+  {id:'m13',n:'Omnipresent',d:'+150% Range +50% Spd',cost:4,req:'m12',cat:'mob',fn:()=>{P.combatRange*=2.5;P.moveSpd+=.5},row:7,ico:'🌐'},
+  {id:'m14',n:'Time Warp',d:'3x Move Speed',cost:5,req:'m13',cat:'mob',fn:()=>{P.moveSpd*=3},row:8,ico:'⏳'},
+  // ── UTILITY (20 skills) ──
+  {id:'u1',n:'Fast Reader',d:'+60% Dlg Speed',cost:1,req:null,cat:'util',fn:()=>{P.dlgSpd+=.6},row:0,ico:'📖'},
+  {id:'u4',n:'Haggler',d:'+25% Gold',cost:1,req:null,cat:'util',fn:()=>{P.goldB+=.25},row:0,ico:'💰'},
+  {id:'u7',n:'Quick Learner',d:'+20% XP',cost:1,req:null,cat:'util',fn:()=>{P.xpB+=.2},row:0,ico:'📚'},
+  {id:'u10',n:'Meditation',d:'+100% Regen',cost:1,req:null,cat:'util',fn:()=>{P.regen+=1},row:0,ico:'🧘'},
+  {id:'u2',n:'Speed Reader',d:'+100% Dlg Speed',cost:1,req:'u1',cat:'util',fn:()=>{P.dlgSpd+=1},row:1,ico:'📖'},
+  {id:'u5',n:'Treasure Hunter',d:'+40% Gold',cost:1,req:'u4',cat:'util',fn:()=>{P.goldB+=.4},row:1,ico:'💎'},
+  {id:'u8',n:'Wisdom Tome',d:'+35% XP',cost:1,req:'u7',cat:'util',fn:()=>{P.xpB+=.35},row:1,ico:'📕'},
+  {id:'u14',n:'Inner Peace',d:'+200% Regen',cost:1,req:'u10',cat:'util',fn:()=>{P.regen+=2},row:1,ico:'☮'},
+  {id:'u3',n:'Skip Dialogue',d:'Instant dialogue',cost:2,req:'u2',cat:'util',fn:()=>{P.dlgSpd=99},row:2,ico:'⏭'},
+  {id:'u6',n:'Midas Touch',d:'+60% Gold',cost:2,req:'u5',cat:'util',fn:()=>{P.goldB+=.6},row:2,ico:'👑'},
+  {id:'u9',n:'Enlightenment',d:'+60% XP',cost:2,req:'u8',cat:'util',fn:()=>{P.xpB+=.6},row:2,ico:'🌟'},
+  {id:'u15',n:'Iron Body',d:'+5 DEF +50 Max HP',cost:2,req:'u14',cat:'util',fn:()=>{P.def+=5;P.maxHp+=50},row:2,ico:'🛡'},
+  {id:'u12',n:'AUTO UPGRADE',d:'Auto-buys skills',cost:2,req:'u3',cat:'util',fn:()=>{P.autoUp=true},row:3,ico:'⚡'},
+  {id:'u13',n:"Fortune's Favor",d:'+100% Gold +50% XP',cost:2,req:'u6',cat:'util',fn:()=>{P.goldB+=1;P.xpB+=.5},row:3,ico:'🍀'},
+  {id:'u16',n:'Scholar',d:'+100% XP',cost:2,req:'u9',cat:'util',fn:()=>{P.xpB+=1},row:3,ico:'🎓'},
+  {id:'u17',n:'Fortress',d:'+10 DEF +100 Max HP',cost:2,req:'u15',cat:'util',fn:()=>{P.def+=10;P.maxHp+=100},row:3,ico:'🏰'},
+  {id:'u18',n:'Greed',d:'+200% Gold',cost:3,req:'u13',cat:'util',fn:()=>{P.goldB+=2},row:4,ico:'💎'},
+  {id:'u19',n:'Sage',d:'+200% XP',cost:3,req:'u16',cat:'util',fn:()=>{P.xpB+=2},row:4,ico:'🧙'},
+  {id:'u20',n:'Titan',d:'+20 DEF +200 HP +5 Regen',cost:3,req:'u17',cat:'util',fn:()=>{P.def+=20;P.maxHp+=200;P.regen+=5},row:4,ico:'⛰'},
+  {id:'u21',n:'King Midas',d:'Gold x3',cost:3,req:'u18',cat:'util',fn:()=>{P.goldB*=3},row:5,ico:'👑'},
+  {id:'u22',n:'Ascendant',d:'XP x3 +300 Max HP',cost:4,req:'u19',cat:'util',fn:()=>{P.xpB*=3;P.maxHp+=300},row:5,ico:'🌌'},
+  {id:'u23',n:'Immortal',d:'+50 DEF +500 HP +10 Regen',cost:4,req:'u20',cat:'util',fn:()=>{P.def+=50;P.maxHp+=500;P.regen+=10},row:6,ico:'♾'},
+  {id:'u24',n:'Golden Age',d:'Gold x5 +100% XP',cost:4,req:'u21',cat:'util',fn:()=>{P.goldB*=5;P.xpB+=1},row:6,ico:'🏛'},
+  {id:'u25',n:'Transcendence',d:'+1000 HP +100 DEF',cost:5,req:'u23',cat:'util',fn:()=>{P.maxHp+=1000;P.def+=100},row:7,ico:'✨'},
+  {id:'u26',n:'Omniscient',d:'All bonuses x2',cost:5,req:'u25',cat:'util',fn:()=>{P.goldB*=2;P.xpB*=2;P.regen*=2},row:8,ico:'🔮'},
+];
+let owned=new Set();
+
+// ═══ WORLD ═══
+const BIO=[
+  {n:'Greenhollow Plains',c:'#3a6b2a',x:0,y:0,w:2200,h:2600},
+  {n:'Darkwood Forest',c:'#1a3a1a',x:2200,y:0,w:2000,h:2000},
+  {n:'Ashfall Wastes',c:'#5a4030',x:4200,y:0,w:2200,h:2600},
+  {n:'Crystal Lake',c:'#2a4a5a',x:0,y:2600,w:2600,h:2600},
+  {n:'Ironpeak Mountains',c:'#4a4a50',x:2600,y:2000,w:1800,h:1800},
+  {n:'Sunscorch Desert',c:'#8a7a50',x:4200,y:2600,w:2200,h:2600},
+  {n:'The Shadowmere',c:'#1a1a2a',x:2600,y:3800,w:1600,h:1400}
+];
+const TWN=[
+  {n:'Willowbrook',x:900,y:2600,d:'A peaceful farming village.',v:true,r:65},
+  {n:'Merchant',x:1050,y:2500,d:'A traveling merchant with rare goods.',v:true,r:30,merchant:true},
+  {n:'Thornwatch',x:700,y:1200,d:'Frontier outpost.',v:false,r:50},
+  {n:'Eldergrove',x:3000,y:800,d:'Druid settlement in ancient trees.',v:false,r:55},
+  {n:'Cinderhold',x:5000,y:1200,d:'Dwarven forge-city.',v:false,r:60},
+  {n:'Mistport',x:900,y:3900,d:'Port town on Crystal Lake.',v:false,r:65},
+  {n:'Ironhaven',x:3400,y:2800,d:'Fortified mountain city.',v:false,r:70},
+  {n:'Sunspire',x:5400,y:3600,d:'Golden city of the Sun Elves.',v:false,r:60},
+  {n:'Shadowmere Sanctum',x:3400,y:4400,d:'Hidden monastery.',v:false,r:50},
+  {n:'Briarwood',x:1800,y:1600,d:'Logging camp on the forest edge.',v:false,r:45},
+  {n:'Dusthaven',x:4600,y:2200,d:'Desert trading post.',v:false,r:48},
+  {n:'Frostmere',x:1200,y:600,d:'Northern fishing hamlet.',v:false,r:42},
+  {n:'Stonekeep',x:3000,y:2200,d:'Mountain pass fortress.',v:false,r:52},
+  {n:'Ashfall Camp',x:4800,y:600,d:'Scavenger settlement in the wastes.',v:false,r:44},
+  {n:'Lakeside',x:1600,y:3200,d:'Quiet village on the crystal shore.',v:false,r:46},
+  {n:'Duskhollow',x:2800,y:4800,d:'Remote outpost near the Shadowmere.',v:false,r:40},
+];
+const ET=[
+  {n:'Slime',hp:12,a:2,xp:10,g:6,c:'#50c050',s:8},
+  {n:'Wolf',hp:22,a:4,xp:16,g:9,c:'#909090',s:10},
+  {n:'Bandit',hp:35,a:7,xp:24,g:16,c:'#a06040',s:12},
+  {n:'Forest Spirit',hp:30,a:6,xp:22,g:13,c:'#40c0a0',s:10},
+  {n:'Bone Archer',hp:45,a:9,xp:30,g:19,c:'#c0c080',s:11},
+  {n:'Cave Troll',hp:70,a:12,xp:42,g:28,c:'#606050',s:16},
+  {n:'Dark Knight',hp:90,a:15,xp:55,g:38,c:'#403050',s:14},
+  {n:'Sand Wyrm',hp:110,a:17,xp:70,g:48,c:'#c0a050',s:18},
+  {n:'Shadow Wraith',hp:80,a:18,xp:75,g:52,c:'#4040a0',s:12},
+  {n:'Fire Elemental',hp:140,a:22,xp:95,g:62,c:'#e04020',s:16},
+  {n:'Wraith Lord',hp:220,a:30,xp:160,g:100,c:'#2020a0',s:18},
+  {n:'Dragon Whelp',hp:300,a:35,xp:200,g:130,c:'#900040',s:22}
+];
+const RD=[
+  [[0,2600],[900,2600],[1600,2300],[2400,1800],[3000,800]],
+  [[900,2600],[900,1900],[700,1200]],
+  [[3000,800],[3800,1200],[4400,1200],[5000,1200]],
+  [[900,2600],[1300,3100],[900,3900]],
+  [[3000,800],[3200,1700],[3400,2800]],
+  [[3400,2800],[4200,2900],[5000,3300],[5400,3600]],
+  [[3400,2800],[3400,3700],[3400,4400]],
+  [[900,3900],[2000,4100],[3000,4200],[3400,4400]],
+  [[5000,1200],[5200,2100],[5400,3600]],
+  // New roads to new towns
+  [[700,1200],[1200,600]], // to Frostmere
+  [[900,2600],[1800,1600]], // to Briarwood
+  [[1800,1600],[2400,1800]], // Briarwood to forest road
+  [[3000,2200],[3400,2800]], // Stonekeep to Ironhaven
+  [[3000,800],[3000,2200]], // Eldergrove to Stonekeep
+  [[4600,2200],[5000,1200]], // Dusthaven to Cinderhold
+  [[4600,2200],[5400,3600]], // Dusthaven to Sunspire
+  [[900,3900],[1600,3200]], // Mistport to Lakeside
+  [[4800,600],[5000,1200]], // Ashfall to Cinderhold
+  [[2800,4800],[3400,4400]], // Duskhollow to Sanctum
+];
+
+// ═══ QUESTS ═══
+function Q(id,n,tp,ch,ds,lr,st,rw,lore,ul,dlg){return{id,n,tp,ch,ds,lr,st,rw:{e:rw[0],g:rw[1]},lore,ul:ul||[],dlg:dlg||[]};}
+function S(t,x,y,tx,en,ct){return{t,x,y,tx,en,ct};}
+const QS=[
+  Q('m1','The Road Ahead','M',1,'Speak with Elder Thomas and learn about the realm.',1,[S('dlg'),S('travel',700,2300,'Visit the old shrine'),S('dlg'),S('travel',900,2600,'Return to Willowbrook'),S('dlg')],[40,25],'Elder Thomas entrusted you with the Waystone of Guidance — an ancient relic that guides heroes on their path.',['m2','s1','s2'],[{w:'Elder Thomas',t:'Welcome, traveler. You\'ve arrived at a troubled time. The Greenhollow Plains were once peaceful, but darkness creeps from the Darkwood to the north. Our realm needs a hero.'},{w:'Elder Thomas',t:'This old shrine marks the edge of our lands. Beyond lies the unknown. The creatures grow bolder every day, and the ancient Wardstones that protect us are failing.'},{w:'Elder Thomas',t:'Take this — the Waystone of Guidance. It was forged by the first druids to lead heroes through the realm. With it, your path will always be clear. Go now, and may the light guide you.'}]),
+  Q('m2','Into the Darkwood','M',1,'Investigate why creatures flee the forest.',2,[S('dlg'),S('travel',2400,1500,'Enter the Darkwood'),S('combat',0,0,'Calm 2 spirits','Forest Spirit',2),S('discover',3000,800,'Find Eldergrove','Eldergrove'),S('dlg')],[100,45],'Ancient wards are failing.',['m3','s3','s4','bw1','fm1'],[{w:'Scout Helia',t:'The forest is restless. Animals flee south, spirits attack anything that moves.'},{w:'Archdruid Yennefer',t:'Welcome to Eldergrove. The forest screams of corruption. We need your help.'}]),
+  Q('m3',"Corruption's Root",'M',2,'Find the source of corruption.',3,[S('dlg'),S('travel',3200,500,'Journey to corruption site'),S('combat',0,0,'Defeat corrupted spirits','Forest Spirit',3),S('travel',3000,800,'Report to Eldergrove'),S('dlg')],[140,60],'A shattered Wardstone leaks sealing magic.',['m4','s5','s6'],[{w:'Archdruid Yennefer',t:'The corruption stems from the northeast. An old power stirs there.'},{w:'Archdruid Yennefer',t:'A Wardstone... broken. There were five, forged to imprison the Betrayer King.'}]),
+  Q('m4','March to Thornwatch','M',2,'Warn the northern outpost.',4,[S('dlg'),S('discover',700,1200,'Discover Thornwatch','Thornwatch'),S('combat',0,0,'Clear the road','Bandit',4),S('dlg')],[180,80],'The garrison is undermanned.',['m5','s7','s8'],[{w:'Archdruid Yennefer',t:'Thornwatch must be warned. They\'ll be the first line of defense.'},{w:'Captain Aldric',t:'Bandits AND forest creatures going mad? Head to the Ironpeaks.'}]),
+  Q('m5','The Ironpeak Ascent','M',3,'Seek the mountain Wardstone.',5,[S('dlg'),S('travel',3200,2400,'Climb the Ironpeaks'),S('combat',0,0,'Clear trolls','Cave Troll',2),S('discover',3400,2800,'Find Ironhaven','Ironhaven'),S('dlg')],[240,100],'The Wardstone was taken into the mountains.',['m6','s9','s10','s11','sk1','cr1','cr2'],[{w:'Captain Aldric',t:'Old records mention a Wardstone fragment in the Ironpeaks.'},{w:'Commander Theron',t:'The shard was taken to Cinderhold for safekeeping.'}]),
+  Q('m6','Forged in Fire','M',3,'Journey to the dwarven forge.',6,[S('travel',5000,1200,'Travel to Cinderhold'),S('discover',5000,1200,'Discover Cinderhold','Cinderhold'),S('dlg'),S('combat',0,0,'Defeat forge guardian','Fire Elemental',1),S('dlg')],[320,140],'The dwarves forged Wardstones with dragonfire.',['m7','s12','s13','ac1','dh1','cr4'],[{w:'Master Smith Durin',t:'Our forge guardian has gone berserk — corrupted by dark magic. Defeat it, and the shard is yours.'},{w:'Master Smith Durin',t:'The second fragment lies beneath the Sunspire, across the desert.'}]),
+  Q('m7','Desert Crossing','M',4,'Cross the Sunscorch Desert.',7,[S('dlg'),S('travel',4600,2900,'Enter the desert'),S('combat',0,0,'Survive wyrm ambush','Sand Wyrm',2),S('discover',5400,3600,'Discover Sunspire','Sunspire'),S('dlg')],[400,180],'Sunspire was built by vanished Sun Elves.',['m8','s14','s15'],[{w:'Master Smith Durin',t:'Sand wyrms patrol the dunes. But Sunspire still stands.'},{w:'Elder Solara',t:'A human, carrying a Wardstone shard? Perhaps you are the one the prophecy speaks of.'}]),
+  Q('m8','The Crystal Shore','M',4,'Gather allies at Mistport.',8,[S('discover',900,3900,'Discover Mistport','Mistport'),S('dlg'),S('combat',0,0,'Clear pirates','Bandit',5),S('dlg')],[450,200],'Mistport pledges support.',['m9','s16','s17','ls1'],[{w:'Harbormaster Voss',t:'Pirates have blockaded our trade routes! Help us clear them.'},{w:'Harbormaster Voss',t:'The seas are clear! Mistport stands with you.'}]),
+  Q('m9','Into the Shadowmere','M',5,'Enter the realm of darkness.',9,[S('dlg'),S('travel',3400,4400,'Enter the Shadowmere'),S('combat',0,0,'Fight wraiths','Shadow Wraith',3),S('discover',3400,4400,'Find the Sanctum','Shadowmere Sanctum'),S('dlg')],[550,250],'The Betrayer King was imprisoned, not destroyed.',['m10','s18','s19','dk1','cr5'],[{w:'Elder Solara',t:'The Shadowmere is where it all began — where the Betrayer King was sealed.'},{w:'Abbot Kael',t:'The ritual to reforge the seal requires all fragments.'}]),
+  Q('m10','Reassembly','M',5,'Collect remaining shards.',10,[S('dlg'),S('travel',5000,1200,'Return to Cinderhold'),S('combat',0,0,'Defeat vanguard','Dark Knight',3),S('travel',5400,3600,'Return to Sunspire'),S('combat',0,0,'Defeat vanguard','Dark Knight',3),S('travel',3400,4400,'Return to Sanctum'),S('dlg')],[700,350],'The shards unite. The ritual begins.',['m11'],[{w:'Abbot Kael',t:'Gather the remaining shards. The Betrayer\'s forces will try to stop you.'},{w:'Abbot Kael',t:'All fragments are here. But something approaches...'}]),
+  Q('m11',"The Betrayer's Champion",'M',6,'Defend the Sanctum!',11,[S('dlg'),S('combat',0,0,'Repel assault','Shadow Wraith',4),S('combat',0,0,'Slay the champion','Dragon Whelp',1),S('dlg')],[900,500],'The champion falls. The seal holds.',['m12'],[{w:'Abbot Kael',t:'A corrupted dragon leads the assault! Hold them off!'},{w:'Abbot Kael',t:'The seal holds. You have saved the realm.'}]),
+  Q('m12','The Eternal Watch','M',6,'Tour the grateful kingdom.',12,[S('dlg'),S('travel',900,2600,'Visit Willowbrook'),S('travel',3000,800,'Visit Eldergrove'),S('travel',3400,2800,'Visit Ironhaven'),S('travel',5400,3600,'Visit Sunspire'),S('travel',3400,4400,'Return to Sanctum'),S('dlg')],[1200,800],'You are named Warden of the Realm.',['ep1','ep2','ep3','ep4','ep5','cr3'],[{w:'Abbot Kael',t:'Go forth, Warden. Let the people see their savior.'},{w:'The People',t:'Hail, Warden of the Realm! Your name will be sung for a thousand years!'}]),
+  // SIDE QUESTS
+  Q('s1','Herb Gathering','G',0,'Collect herbs for the healer.',1,[S('dlg'),S('travel',500,2100,'Search meadow'),S('travel',1300,2900,'Search glade'),S('travel',900,2600,'Deliver herbs'),S('dlg')],[35,18],'Healer Mira uses ancient elven remedies.',[],[{w:'Healer Mira',t:'My herb stores are running low. Could you gather moonpetal and sunroot?'},{w:'Healer Mira',t:'Perfect specimens! These will make enough salves for the whole village.'}]),
+  Q('s2','The Well Problem','S',0,'Something contaminated the well.',1,[S('dlg'),S('travel',1000,2400,'Investigate well'),S('combat',0,0,'Clear slimes','Slime',4),S('travel',900,2600,'Report back'),S('dlg')],[40,22],'Slimes nested in the underground spring.',[],[{w:'Elder Thomas',t:'The well water has turned green. Something foul lurks below.'},{w:'Elder Thomas',t:'Slimes in the well! Thank you, adventurer.'}]),
+  Q('s3','The Old Watchtower','S',0,'Explore ruins north of Eldergrove.',2,[S('dlg'),S('travel',2800,400,'Reach watchtower'),S('combat',0,0,'Clear inhabitants','Bone Archer',3),S('dlg')],[60,30],'The watchtower held lost druid scrolls.',[],[{w:'Druid Fenn',t:'An old watchtower stands north. It may hold useful supplies.'},{w:'Druid Fenn',t:'Ancient scrolls! Rituals we thought lost. A great service to the Circle.'}]),
+  Q('s4','Missing Merchant','S',0,'Find a merchant lost on the road.',2,[S('dlg'),S('travel',1900,1300,'Search the road'),S('combat',0,0,'Fight wolves','Wolf',3),S('travel',3000,800,'Escort to Eldergrove'),S('dlg')],[70,35],'Merchant Caelen trades rare herbs.',[],[{w:'Guild Notice',t:'MISSING: Merchant Caelen, last seen on the forest road three days ago.'},{w:'Merchant Caelen',t:'I thought I was done for! Those wolves had me cornered.'}]),
+  Q('s5','Bandit Bounty','B',0,'Clear a bandit camp.',3,[S('dlg'),S('travel',1900,1800,'Locate camp'),S('combat',0,0,'Clear the camp','Bandit',5),S('travel',3000,800,'Collect bounty'),S('dlg')],[100,55],'The bandits carried the Betrayer King\'s sigil.',[],[{w:'Bounty Board',t:'WANTED: Bandit leader "Scarface" and gang. 55 gold reward.'},{w:'Druid Fenn',t:'A strange sigil among their gear... the mark of the Betrayer King.'}]),
+  Q('s6','Haunted Grove','S',0,'Investigate spectral sightings.',3,[S('dlg'),S('travel',2600,1200,'Enter the grove'),S('combat',0,0,'Dispel specters','Forest Spirit',4),S('dlg')],[90,42],'Restless spirits guarded a forgotten shrine.',[],[{w:'Woodcutter Bram',t:'The old grove east of here... I saw ghost lights.'},{w:'Woodcutter Bram',t:'A shrine? The spirits were protecting their resting place.'}]),
+  Q('s7','Thornwatch Patrol','S',0,'Join a border patrol.',4,[S('dlg'),S('travel',400,800,'Patrol west'),S('combat',0,0,'Fight raiders','Bandit',3),S('travel',900,1000,'Patrol east'),S('combat',0,0,'Fight wolves','Wolf',3),S('travel',700,1200,'Return to post'),S('dlg')],[120,58],'The northern border is busier than expected.',[],[{w:'Sergeant Cole',t:'We\'re short-handed. Care to walk the line with us?'},{w:'Sergeant Cole',t:'Good patrol. I\'ll put in a word with the Captain.'}]),
+  Q('s8','Lost Shrine','G',0,'Find an ancient elven shrine.',4,[S('dlg'),S('travel',1500,600,'Search highlands'),S('travel',1700,400,'Discover the shrine'),S('dlg')],[80,40],'The shrine predates human settlement.',[],[{w:'Scholar Aldrin',t:'Old maps mention an elven shrine in the northern highlands.'},{w:'Scholar Aldrin',t:'The inscriptions mention the Wardstones by name!'}]),
+  Q('s9','Iron Legion Trials','S',0,'Prove yourself to the Legion.',5,[S('dlg'),S('combat',0,0,'Trial of Arms','Cave Troll',1),S('combat',0,0,'Trial of Will','Dark Knight',1),S('dlg')],[170,85],'The Legion respects strength above all.',[],[{w:'Commander Theron',t:'Prove your worth in the Trials. Every ally must pass them.'},{w:'Commander Theron',t:'The Iron Legion recognizes you as an ally.'}]),
+  Q('s10','Mountain Rescue','S',0,'Rescue trapped miners.',5,[S('dlg'),S('travel',3000,2300,'Reach the mine'),S('combat',0,0,'Clear cave-in creatures','Cave Troll',2),S('travel',3400,2800,'Lead miners home'),S('dlg')],[150,75],'The collapse revealed ancient tunnels.',[],[{w:'Foreman Dag',t:'Our miners are trapped! Something is moving in the rubble.'},{w:'Foreman Dag',t:'Safe! But they say the collapse revealed old tunnels with strange markings.'}]),
+  Q('s11','Lake Monster','B',0,'Hunt the lake beast.',5,[S('dlg'),S('travel',1300,3300,'Investigate shore'),S('combat',0,0,'Slay the beast','Cave Troll',2),S('travel',900,2600,'Collect bounty'),S('dlg')],[140,68],'Wardstone magic warped the creature.',[],[{w:'Fisherman Oden',t:'Something big lurks beneath. It capsized two boats.'},{w:'Fisherman Oden',t:'The beast is dead! It had magic crystals growing from its body.'}]),
+  Q('s12','Dwarven Trials','S',0,'Prove your mettle in Cinderhold.',6,[S('dlg'),S('combat',0,0,'Trial of Strength','Cave Troll',1),S('combat',0,0,'Trial of Flame','Fire Elemental',1),S('dlg')],[230,110],'Durin grants you a starfall ore blade.',[],[{w:'Master Smith Durin',t:'Prove you can survive the heat. Our trials will test you.'},{w:'Master Smith Durin',t:'You fight like heroes of old. Take this starfall blade.'}]),
+  Q('s13','Volcanic Vents','G',0,'Gather rare ore from the wastes.',6,[S('dlg'),S('travel',4600,800,'Reach the vents'),S('combat',0,0,'Fight creatures','Fire Elemental',1),S('travel',5000,1200,'Return ore'),S('dlg')],[200,95],'Starfall ore forms near active vents.',[],[{w:'Master Smith Durin',t:'Bring back any starfall ore you find. Worth more than gold.'},{w:'Master Smith Durin',t:'Fine ore! The old techniques still work.'}]),
+  Q('s14','Desert Nomads','S',0,'Help nomads defend their camp.',7,[S('dlg'),S('travel',5000,3300,'Find camp'),S('combat',0,0,'Defend camp','Sand Wyrm',2),S('dlg')],[280,130],'The nomads remember the Sun Elves.',[],[{w:'Chief Zara',t:'The wyrms grow bolder. Help us defend our camp.'},{w:'Chief Zara',t:'My grandmother told stories of the Sun Elves. They went underground.'}]),
+  Q('s15','Oasis Secrets','G',0,'Explore Sun Elf ruins.',7,[S('dlg'),S('travel',5600,4300,'Reach ruins'),S('combat',0,0,'Defeat guardian','Sand Wyrm',1),S('travel',5400,3600,'Return to Sunspire'),S('dlg')],[300,145],'Murals depict the original Wardstone forging.',[],[{w:'Elder Solara',t:'Ancient ruins lie southeast. They may hold knowledge we need.'},{w:'Elder Solara',t:'These murals show the forging of the Wardstones!'}]),
+  Q('s16','Pirate Treasure','G',0,'Recover stolen goods.',8,[S('dlg'),S('travel',700,4300,'Find cave'),S('combat',0,0,'Clear pirates','Bandit',5),S('travel',900,3900,'Return goods'),S('dlg')],[320,150],'The pirates operated for years.',[],[{w:'Merchant Voss',t:'Their loot is in a cave south. Recover our goods!'},{w:'Merchant Voss',t:'Our goods! Take your share, hero.'}]),
+  Q('s17','Sunken Temple','S',0,'Explore a submerged ruin.',8,[S('dlg'),S('travel',1100,3500,'Reach lake center'),S('combat',0,0,'Fight spirits','Shadow Wraith',2),S('dlg')],[280,130],'A Wardstone fragment rests at the lake bottom.',[],[{w:'Scholar Aldrin',t:'A sunken temple in Crystal Lake may contain a Wardstone fragment.'},{w:'Scholar Aldrin',t:'A fragment! Small, but it pulses with power.'}]),
+  Q('s18','Shadow Training','S',0,'Learn shadow combat.',9,[S('dlg'),S('combat',0,0,'Spar with shadows','Shadow Wraith',2),S('combat',0,0,'Advanced training','Dark Knight',2),S('dlg')],[400,200],'Balance is the key to true strength.',[],[{w:'Abbot Kael',t:'To fight darkness, you must understand it.'},{w:'Abbot Kael',t:'Remember: the Betrayer King fell because he sought only power.'}]),
+  Q('s19','The Dark Spire','B',0,'Destroy a dark energy nexus.',9,[S('dlg'),S('travel',3000,4600,'Find the spire'),S('combat',0,0,'Destroy guardians','Shadow Wraith',3),S('combat',0,0,'Destroy nexus','Wraith Lord',1),S('dlg')],[500,250],'The nexus fed power to the Betrayer King.',[],[{w:'Abbot Kael',t:'A dark spire channels power to weaken the prison from within.'},{w:'Abbot Kael',t:'Destroyed! The Betrayer King\'s grip weakens.'}]),
+  // EPILOGUE
+  Q('ep1','The Frozen North','S',0,'Explore beyond the map.',11,[S('dlg'),S('travel',300,200,'Journey north'),S('combat',0,0,'Fight frost creatures','Bone Archer',5),S('combat',0,0,'Defeat frost lord','Wraith Lord',1),S('dlg')],[600,300],'A frozen waste with ancient dangers.',[],[{w:'Explorer Finn',t:'I\'ve mapped the northern reaches. Ice and treasure await.'},{w:'Explorer Finn',t:'A frost giant guarding ancient artifacts!'}]),
+  Q('ep2','Depths of Cinderhold','S',0,'Explore deep mines.',11,[S('dlg'),S('travel',4800,1400,'Enter deep mines'),S('combat',0,0,'Fight lava creatures','Fire Elemental',3),S('dlg')],[650,320],'The tunnels connect to something ancient.',[],[{w:'Master Smith Durin',t:'We\'ve broken through to deeper tunnels. Ancient ones.'},{w:'Master Smith Durin',t:'Made by the first dwarves who forged the original Wardstones.'}]),
+  Q('ep3','Ghost Fleet','B',0,'Defeat spectral ships.',11,[S('dlg'),S('travel',700,3700,'Board ghost ship'),S('combat',0,0,'Fight crew','Shadow Wraith',4),S('combat',0,0,'Defeat captain','Wraith Lord',1),S('dlg')],[700,350],'The ghost fleet sailed in the Betrayer King\'s navy.',[],[{w:'Harbormaster Voss',t:'Ghost ships on the lake! An entire fleet.'},{w:'Harbormaster Voss',t:'The Betrayer King\'s fleet, still sailing after centuries.'}]),
+  Q('ep4','The World Tree','G',0,'Find the legendary World Tree.',12,[S('dlg'),S('travel',2800,200,'Journey deep into Darkwood'),S('combat',0,0,'Pass guardians','Forest Spirit',4),S('dlg')],[600,280],'Source of all natural magic.',[],[{w:'Archdruid Yennefer',t:'Deep in the Darkwood stands the World Tree.'},{w:'Archdruid Yennefer',t:'Its roots connect all living things.'}]),
+  Q('ep5','Eternal Vigil','S',0,'Establish watch posts.',12,[S('dlg'),S('travel',700,1200,'Thornwatch post'),S('travel',3400,2800,'Ironhaven post'),S('travel',5400,3600,'Sunspire post'),S('travel',3400,4400,'Sanctum post'),S('dlg')],[1000,500],'The Eternal Watch network spans the realm.',[],[{w:'Commander Theron',t:'Establish watch posts at every settlement.'},{w:'Commander Theron',t:'The network is complete. The realm sleeps safer tonight, Warden.'}]),
+  // ── BRIARWOOD QUESTS ──
+  Q('bw1','Timber Trouble','S',0,'Loggers at Briarwood need help clearing beasts.',2,[S('dlg'),S('travel',1800,1600,'Travel to Briarwood'),S('combat',0,0,'Clear wolves from the mill','Wolf',4),S('dlg')],[55,28],'The lumber mill is vital to the region\'s economy.',['bw2','bw3'],[{w:'Foreman Hask',t:'Wolves are denning under the mill platform. We can\'t work like this.'},{w:'Foreman Hask',t:'The mill runs again! Here\'s your pay, adventurer.'}]),
+  Q('bw2','The Poacher','B',0,'A poacher is trapping animals near Briarwood.',3,[S('dlg'),S('travel',2000,1400,'Search the trapline'),S('combat',0,0,'Confront the poacher','Bandit',2),S('travel',1800,1600,'Report to Briarwood'),S('dlg')],[75,38],'The poacher worked for a smuggling ring.',['bw4'],[{w:'Ranger Wynn',t:'Someone is setting steel traps. The animals suffer needlessly.'},{w:'Ranger Wynn',t:'A smuggler\'s mark on his gear. This goes deeper than poaching.'}]),
+  Q('bw3','Ancient Stump','G',0,'A druid needs heartwood from the oldest tree.',2,[S('dlg'),S('travel',2100,1800,'Find the ancient stump'),S('travel',1800,1600,'Deliver heartwood'),S('dlg')],[45,22],'The heartwood still holds living magic.',[],[{w:'Druid Lira',t:'The great stump east of here still breathes with old magic. Bring me its heartwood.'},{w:'Druid Lira',t:'I can feel the pulse within. This will heal many.'}]),
+  Q('bw4','Smuggler\'s Trail','S',0,'Follow the smuggling trail from Briarwood.',4,[S('dlg'),S('travel',2200,1200,'Follow the trail north'),S('combat',0,0,'Clear the smuggler camp','Bandit',5),S('dlg')],[110,55],'The smugglers were moving Wardstone fragments.',[],[{w:'Ranger Wynn',t:'The trail leads north into the forest. Be careful — there could be many.'},{w:'Ranger Wynn',t:'Wardstone fragments in their cargo? Someone is collecting these on purpose.'}]),
+  // ── FROSTMERE QUESTS ──
+  Q('fm1','Ice Fishing','G',0,'Frostmere\'s lake has frozen over early.',2,[S('dlg'),S('travel',1200,600,'Travel to Frostmere'),S('travel',1400,500,'Fish at the north hole'),S('travel',1200,600,'Deliver the catch'),S('dlg')],[50,25],'The early freeze worries the elders.',['fm2','fm3'],[{w:'Elder Sif',t:'The lake froze two months early. We need fish before our stores run out.'},{w:'Elder Sif',t:'Enough for a fortnight. But the early frost is not natural.'}]),
+  Q('fm2','The Frozen Shrine','S',0,'Something glows beneath the Frostmere ice.',3,[S('dlg'),S('travel',1300,400,'Investigate the glow'),S('combat',0,0,'Fight ice creatures','Bone Archer',3),S('dlg')],[80,40],'A Wardstone fragment frozen in the lake bed.',[],[{w:'Elder Sif',t:'Fishermen see a blue glow deep under the ice. It wasn\'t there before.'},{w:'Elder Sif',t:'A Wardstone shard, frozen for centuries. The thaw is releasing old magic.'}]),
+  Q('fm3','Northern Wolves','B',0,'A large wolf pack threatens Frostmere.',3,[S('dlg'),S('travel',1000,400,'Track the pack'),S('combat',0,0,'Thin the pack','Wolf',5),S('travel',1200,600,'Claim bounty'),S('dlg')],[70,35],'The pack was driven south by something worse.',[],[{w:'Hunter Bjorn',t:'Biggest pack I\'ve ever seen. Thirty wolves, maybe more, all heading south.'},{w:'Hunter Bjorn',t:'They\'re fleeing something. Whatever drove them south, I don\'t want to meet it.'}]),
+  // ── STONEKEEP QUESTS ──
+  Q('sk1','Mountain Pass','S',0,'The pass to Stonekeep is blocked by rockfall.',5,[S('dlg'),S('travel',3000,2200,'Travel to Stonekeep'),S('combat',0,0,'Clear pass creatures','Cave Troll',2),S('dlg')],[150,75],'Stonekeep controls the only pass through the Ironpeaks.',['sk2','sk3'],[{w:'Warden Grohl',t:'Rockfall blocked the east pass. Something\'s nesting in the rubble.'},{w:'Warden Grohl',t:'Pass is clear. Stonekeep thanks you — this route is our lifeline.'}]),
+  Q('sk2','The Deep Mine','S',0,'Strange noises from the abandoned mine.',6,[S('dlg'),S('travel',2800,2400,'Enter the mine'),S('combat',0,0,'Clear the mine','Cave Troll',3),S('dlg')],[180,90],'The mine connects to ancient dwarven tunnels.',[],[{w:'Warden Grohl',t:'The old mine echoes with sounds. Miners won\'t go near it.'},{w:'Warden Grohl',t:'Ancient tunnels beneath. The dwarves built deeper than anyone knew.'}]),
+  Q('sk3','Supply Run','G',0,'Stonekeep needs supplies from Ironhaven.',5,[S('dlg'),S('travel',3400,2800,'Collect from Ironhaven'),S('travel',3000,2200,'Deliver to Stonekeep'),S('dlg')],[120,60],'The mountain communities depend on each other.',[],[{w:'Warden Grohl',t:'We need iron and grain from Ironhaven. The road is dangerous alone.'},{w:'Warden Grohl',t:'Supplies received. Stonekeep endures another season.'}]),
+  // ── DUSTHAVEN QUESTS ──
+  Q('dh1','Water Crisis','S',0,'Dusthaven\'s well has dried up.',6,[S('dlg'),S('travel',4600,2200,'Travel to Dusthaven'),S('travel',4400,2000,'Find new water source'),S('travel',4600,2200,'Report back'),S('dlg')],[160,80],'The desert is expanding, swallowing the borderlands.',['dh2','dh3'],[{w:'Trader Mika',t:'The well went dry last week. Without water, Dusthaven dies.'},{w:'Trader Mika',t:'An underground spring! We can dig a new well. Dusthaven survives.'}]),
+  Q('dh2','Sand Bandits','B',0,'Raiders attack caravans near Dusthaven.',7,[S('dlg'),S('travel',4800,2400,'Patrol the trade route'),S('combat',0,0,'Defeat raiders','Bandit',5),S('combat',0,0,'Defeat their leader','Dark Knight',1),S('dlg')],[220,110],'The raiders were deserters from a forgotten army.',[],[{w:'Trader Mika',t:'Three caravans lost this month. The raiders know every shortcut.'},{w:'Trader Mika',t:'Deserters from the old wars, still fighting for a kingdom that fell centuries ago.'}]),
+  Q('dh3','Desert Bloom','G',0,'A rare flower blooms once a decade in the deep desert.',6,[S('dlg'),S('travel',5000,2600,'Search the dunes'),S('travel',4600,2200,'Deliver the bloom'),S('dlg')],[140,70],'The desert bloom can cure any poison.',[],[{w:'Herbalist Zora',t:'The nightbloom flowers only under a new moon. One grows in the eastern dunes.'},{w:'Herbalist Zora',t:'Magnificent! This single bloom will save many lives.'}]),
+  // ── ASHFALL CAMP QUESTS ──
+  Q('ac1','Scavenger Hunt','G',0,'Ashfall Camp needs supplies from the wastes.',4,[S('dlg'),S('travel',4800,600,'Travel to Ashfall Camp'),S('travel',4500,400,'Scavenge the ruins'),S('travel',4800,600,'Deliver salvage'),S('dlg')],[90,45],'The wastes hide treasures from a lost civilization.',['ac2','ac3'],[{w:'Boss Kira',t:'The old ruins north of here are full of useful scrap. Bring what you find.'},{w:'Boss Kira',t:'Good haul! We can patch the walls and fix the water filters.'}]),
+  Q('ac2','Ashwalker','B',0,'A dangerous creature roams the Ashfall Wastes.',5,[S('dlg'),S('travel',4400,300,'Track the ashwalker'),S('combat',0,0,'Slay the ashwalker','Fire Elemental',1),S('travel',4800,600,'Claim bounty'),S('dlg')],[160,80],'The ashwalker was a fire elemental corrupted by volcanic gases.',[],[{w:'Boss Kira',t:'Something stalks the ash fields. Burning footprints where it walks.'},{w:'Boss Kira',t:'A fire spirit gone mad. The wastes are a little safer now.'}]),
+  Q('ac3','Lost Expedition','S',0,'A mining expedition vanished in the wastes.',5,[S('dlg'),S('travel',4200,200,'Search the expedition route'),S('combat',0,0,'Fight scavengers','Bone Archer',3),S('travel',4800,600,'Return with findings'),S('dlg')],[130,65],'The expedition found something they shouldn\'t have.',[],[{w:'Boss Kira',t:'Ten miners went east three weeks ago. None returned.'},{w:'Boss Kira',t:'Their journals mention a sealed door deep underground. Wardstone markings.'}]),
+  // ── LAKESIDE QUESTS ──
+  Q('ls1','Crystal Waters','G',0,'Lakeside needs crystal samples from the lake.',3,[S('dlg'),S('travel',1600,3200,'Travel to Lakeside'),S('travel',1300,3400,'Gather crystals from the shore'),S('travel',1600,3200,'Deliver samples'),S('dlg')],[60,30],'The crystals contain trace Wardstone energy.',['ls2','ls3'],[{w:'Scholar Fen',t:'Strange crystals wash ashore. I need samples to study their properties.'},{w:'Scholar Fen',t:'Wardstone resonance! The lake itself is imbued with ancient sealing magic.'}]),
+  Q('ls2','Lake Spirits','S',0,'Spirits rise from Crystal Lake at night.',4,[S('dlg'),S('travel',1400,3500,'Investigate at the shore'),S('combat',0,0,'Calm the spirits','Forest Spirit',3),S('dlg')],[100,50],'The spirits guard a sunken Wardstone.',[],[{w:'Scholar Fen',t:'The fishermen see lights on the water. Spirits, rising from the deep.'},{w:'Scholar Fen',t:'They guard what lies beneath — a Wardstone, whole and intact, at the lake bottom.'}]),
+  Q('ls3','Ferry Repair','S',0,'The Lakeside ferry needs materials.',3,[S('dlg'),S('travel',1200,3000,'Gather timber'),S('travel',1600,3200,'Deliver materials'),S('dlg')],[55,28],'The ferry connects Lakeside to the southern settlements.',[],[{w:'Ferryman Pike',t:'My ferry is falling apart. I need good timber from the north shore.'},{w:'Ferryman Pike',t:'She\'ll float another decade now. The south road is open again.'}]),
+  // ── DUSKHOLLOW QUESTS ──
+  Q('dk1','Border Watch','S',0,'Duskhollow guards the edge of the Shadowmere.',8,[S('dlg'),S('travel',2800,4800,'Travel to Duskhollow'),S('combat',0,0,'Patrol the border','Shadow Wraith',2),S('dlg')],[280,140],'Duskhollow exists to watch for signs of the Betrayer\'s return.',['dk2','dk3'],[{w:'Watcher Thane',t:'We are the first line against the shadow. Help us patrol the border.'},{w:'Watcher Thane',t:'The wraiths grow bolder. The seal weakens with each passing year.'}]),
+  Q('dk2','Shadow Artifacts','G',0,'Recover cursed objects leaking from the Shadowmere.',9,[S('dlg'),S('travel',2600,4900,'Search the shadow edge'),S('combat',0,0,'Defeat cursed guardians','Shadow Wraith',3),S('travel',2800,4800,'Return artifacts'),S('dlg')],[350,175],'The artifacts were tools of the Betrayer King\'s court.',[],[{w:'Watcher Thane',t:'Dark objects wash out of the Shadowmere. They corrupt everything they touch.'},{w:'Watcher Thane',t:'Court regalia of the Betrayer King himself. These belong in the Sanctum vault.'}]),
+  Q('dk3','The Thin Veil','S',0,'The boundary between realms is thinning.',10,[S('dlg'),S('travel',2600,4600,'Investigate the veil'),S('combat',0,0,'Seal the breach','Shadow Wraith',4),S('combat',0,0,'Defeat veil guardian','Wraith Lord',1),S('dlg')],[450,225],'The veil between the mortal realm and the shadow grows thin.',[],[{w:'Watcher Thane',t:'Reality itself is tearing. I can see through to... somewhere else.'},{w:'Watcher Thane',t:'Sealed, but barely. The Betrayer King pushes harder every day.'}]),
+  // ── CROSS-REGION QUESTS ──
+  Q('cr1','The Courier','S',0,'Deliver urgent messages across the realm.',3,[S('dlg'),S('travel',700,1200,'Deliver to Thornwatch'),S('travel',1800,1600,'Deliver to Briarwood'),S('travel',900,2600,'Return to Willowbrook'),S('dlg')],[80,40],'Communication between settlements is vital.',[],[{w:'Elder Thomas',t:'These letters must reach Thornwatch and Briarwood before week\'s end.'},{w:'Elder Thomas',t:'Swift work! The settlements can coordinate their defenses now.'}]),
+  Q('cr2','Trade Route Survey','G',0,'Map the safest trade routes.',4,[S('dlg'),S('travel',900,2600,'Start at Willowbrook'),S('travel',1600,3200,'Survey Lakeside route'),S('travel',900,3900,'Survey Mistport route'),S('travel',900,2600,'Compile the map'),S('dlg')],[100,50],'Safe trade routes strengthen every settlement.',[],[{w:'Merchant Caelen',t:'I need someone to walk the routes and mark the safe passages.'},{w:'Merchant Caelen',t:'With this map, merchants can avoid the worst dangers. Trade will flourish.'}]),
+  Q('cr3','The Grand Tour','S',0,'Visit every settlement in the realm.',8,[S('dlg'),S('travel',700,1200,'Visit Thornwatch'),S('travel',1200,600,'Visit Frostmere'),S('travel',1800,1600,'Visit Briarwood'),S('travel',3000,800,'Visit Eldergrove'),S('travel',3000,2200,'Visit Stonekeep'),S('travel',4800,600,'Visit Ashfall Camp'),S('travel',5000,1200,'Visit Cinderhold'),S('travel',4600,2200,'Visit Dusthaven'),S('travel',5400,3600,'Visit Sunspire'),S('travel',3400,2800,'Visit Ironhaven'),S('travel',1600,3200,'Visit Lakeside'),S('travel',900,3900,'Visit Mistport'),S('travel',2800,4800,'Visit Duskhollow'),S('travel',3400,4400,'Visit the Sanctum'),S('travel',900,2600,'Return home'),S('dlg')],[600,300],'You have walked every road in the realm.',[],[{w:'Elder Thomas',t:'A true hero knows every corner of the land they protect.'},{w:'Elder Thomas',t:'You have seen it all. Every village, every frontier. The realm knows its Warden.'}]),
+  Q('cr4','Mountain to Sea','S',0,'Escort goods from Cinderhold to Mistport.',6,[S('dlg'),S('travel',5000,1200,'Collect from Cinderhold'),S('combat',0,0,'Fight highway bandits','Bandit',4),S('travel',3400,2800,'Pass through Ironhaven'),S('travel',900,3900,'Deliver to Mistport'),S('dlg')],[200,100],'The longest trade route in the realm.',[],[{w:'Master Smith Durin',t:'Mistport ordered a shipment of starfall steel. It needs a strong escort.'},{w:'Harbormaster Voss',t:'Starfall steel! This is worth more than gold. Mistport thanks you.'}]),
+  Q('cr5','Healer\'s Circuit','G',0,'Deliver medicine to remote settlements.',5,[S('dlg'),S('travel',1200,600,'Deliver to Frostmere'),S('travel',4800,600,'Deliver to Ashfall Camp'),S('travel',2800,4800,'Deliver to Duskhollow'),S('travel',900,2600,'Return to Willowbrook'),S('dlg')],[160,80],'Even the most remote settlements deserve care.',[],[{w:'Healer Mira',t:'These medicines must reach the frontier towns. Many are sick.'},{w:'Healer Mira',t:'Every life saved is a victory. Thank you for walking so far.'}]),
+];
+
+// ═══ STATE ═══
+let aQ=null,sI=0,doneQ=new Set(),openQ=new Set(['m1']),lore=[];
+let ens=[],cT=null,cK=0,cN=0,ctmr=0;
+let parts=[],flts=[],trees=[],rocks=[],water=[],groundDeco=[];
+let tab='quests',qSub='active',pOn=false,grinding=false,grindLv=null;
+let dlgQ=[],dlgOn=false,dlgCI=0,dlgTm=0,dlgF='',dlgW='',dlgI=0;
+
+// ═══ RELICS ═══
+const RELICS=[
+  {id:'waystone',n:'Waystone of Guidance',d:'An ancient druidic artifact carved from a fragment of the first Wardstone. It pulses with a soft golden light, guiding its bearer along the paths of destiny.',effect:'Auto-Navigation — Cursor auto-travels to quest objectives.',ico:'✦',price:0,sell:0,quest:true,fn:()=>{P.autoQ=true;}},
+  {id:'ironbark',n:'Ironbark Shield',d:'A shield carved from the heartwood of the Great Ironbark tree. Its bark is harder than steel, yet light as a feather.',effect:'+8 Defense, +50 Max HP',ico:'🛡',price:120,sell:60,fn:()=>{P.def+=8;P.maxHp=(P.maxHp||100)+50;}},
+  {id:'sunstone',n:'Sunstone Pendant',d:'A warm amber gem that radiates golden light. Merchants claim it attracts fortune like a moth to flame.',effect:'+50% Gold Bonus, +15% XP Bonus',ico:'☀',price:200,sell:100,fn:()=>{P.goldB+=.5;P.xpB+=.15;}},
+  {id:'shadowfang',n:'Shadowfang Dagger',d:'A blade forged in the depths of the Shadowmere. Its edge seems to drink the light around it.',effect:'+12 Attack, +15% Crit Chance',ico:'🗡',price:300,sell:150,fn:()=>{P.atk+=12;P.crit+=.15;}},
+  {id:'windrunner',n:'Windrunner Cloak',d:'Woven from threads of captured wind. Those who wear it move with impossible speed, their feet barely touching the ground.',effect:'+60% Move Speed, +30% ATK Speed',ico:'🌬',price:250,sell:125,fn:()=>{P.moveSpd+=.6;P.atkSpd+=.3;}},
+  {id:'chrono',n:'Chrono Crystal',d:'Time bends around this violet crystal. The more you journey, the faster you become — each quest completed accelerates your very existence.',effect:'+1% Move Speed per quest completed (stacks forever)',ico:'💎',price:400,sell:200,fn:()=>{}},
+  {id:'lucky',n:'Lucky Coin',d:'A coin minted in a kingdom that never existed. Flip it before a quest and somehow your rewards grow. The more you flip, the luckier you get.',effect:'+1% quest rewards per quest completed (stacks forever)',ico:'🪙',price:500,sell:250,fn:()=>{}},
+];
+let ownedRelics=new Set(); // set of relic ids
+let shopMode='buy';
+let shopOpen=false;
+let nearMerchant=false;
+
+// ═══ FOG OF WAR ═══
+const FOG_SCALE=8; // 1 fog pixel = 8 world pixels
+const FW=Math.ceil(WW/FOG_SCALE),FH=Math.ceil(WH/FOG_SCALE);
+const fogC=document.createElement('canvas');fogC.width=FW;fogC.height=FH;
+const FX=fogC.getContext('2d');
+FX.fillStyle='#0b0b0f';FX.fillRect(0,0,FW,FH);
+let fogRevealed=0,fogTotal=FW*FH;
+const REVEAL_R=28; // fog reveal radius in fog-pixels (~224 world pixels)
+
+function revealFog(wx,wy){
+  let fx=wx/FOG_SCALE,fy=wy/FOG_SCALE;
+  FX.globalCompositeOperation='destination-out';
+  let grad=FX.createRadialGradient(fx,fy,0,fx,fy,REVEAL_R);
+  grad.addColorStop(0,'rgba(0,0,0,1)');
+  grad.addColorStop(.7,'rgba(0,0,0,.8)');
+  grad.addColorStop(1,'rgba(0,0,0,0)');
+  FX.fillStyle=grad;
+  FX.beginPath();FX.arc(fx,fy,REVEAL_R,0,Math.PI*2);FX.fill();
+  FX.globalCompositeOperation='source-over';
+}
+
+function calcExplored(){
+  let data=FX.getImageData(0,0,FW,FH).data;
+  let clear=0;
+  // Sample every 4th pixel for performance
+  for(let i=3;i<data.length;i+=16){if(data[i]<128)clear++;}
+  return Math.min(100,Math.round(clear/(data.length/16)*100));
+}
+
+// Reveal starting area
+revealFog(900,2600);
+
+function genW(){
+  // Trees - more variety per biome
+  for(let i=0;i<600;i++){
+    let x=Math.random()*WW,y=Math.random()*WH,b=bio(x,y);if(!b)continue;
+    let nm=b.n;
+    if(nm.includes('Forest')){
+      trees.push({x,y,s:7+Math.random()*14,c:['#14401a','#1a4a1a','#1a3818','#203a14'][i%4],t:'pine'});
+    } else if(nm.includes('Plains')&&Math.random()<.3){
+      trees.push({x,y,s:4+Math.random()*7,c:'#2a5a2a',t:'bush'});
+    } else if(nm.includes('Lake')&&Math.random()<.2){
+      trees.push({x,y,s:5+Math.random()*6,c:'#2a5a3a',t:'willow'});
+    } else if(nm.includes('Desert')&&Math.random()<.08){
+      trees.push({x,y,s:4+Math.random()*5,c:'#5a7a30',t:'cactus'});
+    } else if(nm.includes('Shadowmere')&&Math.random()<.15){
+      trees.push({x,y,s:6+Math.random()*10,c:'#1a1a30',t:'dead'});
+    }
+  }
+  // Rocks
+  for(let i=0;i<300;i++){
+    let x=Math.random()*WW,y=Math.random()*WH,b=bio(x,y);if(!b)continue;
+    let nm=b.n;
+    if(nm.includes('Mountain'))rocks.push({x,y,s:4+Math.random()*12,c:'#5a5a5a',t:'boulder'});
+    else if(nm.includes('Wastes'))rocks.push({x,y,s:3+Math.random()*8,c:'#4a3a2a',t:'rubble'});
+    else if(nm.includes('Desert')&&Math.random()<.4)rocks.push({x,y,s:2+Math.random()*6,c:'#a09060',t:'sand'});
+    else if(nm.includes('Plains')&&Math.random()<.15)rocks.push({x,y,s:2+Math.random()*4,c:'#6a6a5a',t:'pebble'});
+    else if(nm.includes('Shadowmere')&&Math.random()<.3)rocks.push({x,y,s:3+Math.random()*7,c:'#2a2a3a',t:'dark'});
+  }
+  // Ground details (grass tufts, flowers, sand ripples, etc.) stored in a new array
+  for(let i=0;i<800;i++){
+    let x=Math.random()*WW,y=Math.random()*WH,b=bio(x,y);if(!b)continue;
+    let nm=b.n;
+    if(nm.includes('Plains'))groundDeco.push({x,y,t:'grass',c:'#4a8a3a'});
+    else if(nm.includes('Forest'))groundDeco.push({x,y,t:Math.random()<.3?'mushroom':'fern',c:Math.random()<.3?'#c08040':'#2a5a2a'});
+    else if(nm.includes('Desert'))groundDeco.push({x,y,t:'dune',c:'#b0a060'});
+    else if(nm.includes('Mountain'))groundDeco.push({x,y,t:'gravel',c:'#606060'});
+    else if(nm.includes('Wastes'))groundDeco.push({x,y,t:'ash',c:'#5a4a3a'});
+    else if(nm.includes('Lake'))groundDeco.push({x,y,t:'reeds',c:'#3a6a3a'});
+    else if(nm.includes('Shadowmere'))groundDeco.push({x,y,t:'mist',c:'#2a2a40'});
+  }
+  // Water bodies with more shape
+  water.push(
+    {x:700,y:3500,rx:420,ry:260}, // Crystal Lake main
+    {x:1600,y:3800,rx:200,ry:150}, // Crystal Lake cove
+    {x:1100,y:3200,rx:100,ry:80},  // Small pond
+    {x:1400,y:700,rx:120,ry:90},   // Northern lake near Frostmere
+    {x:3800,y:3200,rx:80,ry:60},   // Mountain stream pool
+    {x:5600,y:4200,rx:150,ry:100}, // Desert oasis
+    {x:2600,y:4600,rx:110,ry:70},  // Shadowmere pool
+  );
+}
+function bio(x,y){for(let b of BIO)if(x>=b.x&&x<b.x+b.w&&y>=b.y&&y<b.y+b.h)return b;return BIO[0];}
+function dst(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+
+function go(){document.getElementById('start').classList.add('gone');setTimeout(()=>{document.getElementById('start').style.display='none'},600);on=true;pOn=true;document.getElementById('panel').classList.remove('h');document.getElementById('tog').style.right='388px';document.getElementById('stats').style.right='388px';renderP();setTimeout(()=>startQst('m1'),400);}
+
+// ═══ PRE-RENDER TERRAIN TO OFFSCREEN CANVAS ═══
+let terrainC,terrainReady=false;
+const mapImg=new Image();
+mapImg.crossOrigin='anonymous';
+mapImg.src='https://raw.githubusercontent.com/Graphic37/QuestCompleteSolo/main/testmap1.png';
+
+function buildTerrain(){
+  terrainC=document.createElement('canvas');terrainC.width=WW;terrainC.height=WH;
+  let T=terrainC.getContext('2d');
+
+  // Start with flat biome colors as immediate fallback
+  for(let b of BIO){T.fillStyle=b.c;T.fillRect(b.x,b.y,b.w,b.h);}
+  terrainReady=true;
+
+  // When image loads, tile it into 4 quadrants
+  mapImg.onload=function(){
+    let hw=WW/2, hh=WH/2;
+    // Top-left quadrant
+    T.drawImage(mapImg,0,0,hw,hh);
+    // Top-right quadrant (same image for now)
+    T.drawImage(mapImg,0,0,mapImg.naturalWidth,mapImg.naturalHeight,hw,0,hw,hh);
+    // Bottom-left quadrant
+    T.drawImage(mapImg,0,0,mapImg.naturalWidth,mapImg.naturalHeight,0,hh,hw,hh);
+    // Bottom-right quadrant
+    T.drawImage(mapImg,0,0,mapImg.naturalWidth,mapImg.naturalHeight,hw,hh,hw,hh);
+  };
+
+  // If image already cached
+  if(mapImg.complete&&mapImg.naturalWidth>0){
+    let hw=WW/2, hh=WH/2;
+    T.drawImage(mapImg,0,0,mapImg.naturalWidth,mapImg.naturalHeight,0,0,hw,hh);
+    T.drawImage(mapImg,0,0,mapImg.naturalWidth,mapImg.naturalHeight,hw,0,hw,hh);
+    T.drawImage(mapImg,0,0,mapImg.naturalWidth,mapImg.naturalHeight,0,hh,hw,hh);
+    T.drawImage(mapImg,0,0,mapImg.naturalWidth,mapImg.naturalHeight,hw,hh,hw,hh);
+  }
+}
+
+// ═══ DRAW ═══
+const ZOOM=0.6;
+function drawW(){
+  X.save();
+  X.scale(ZOOM,ZOOM);
+  X.translate(-cam.x,-cam.y);
+  let vw=W/ZOOM,vh=H/ZOOM;
+  let vl=cam.x-60,vr=cam.x+vw+60,vt=cam.y-60,vb=cam.y+vh+60;
+
+  // ── Pre-rendered terrain ──
+  if(terrainReady){
+    let sx=Math.max(0,Math.floor(cam.x-vw*.1)),sy=Math.max(0,Math.floor(cam.y-vh*.1));
+    let sw=Math.min(WW-sx,vw+vw*.2),sh=Math.min(WH-sy,vh+vh*.2);
+    if(sw>0&&sh>0) X.drawImage(terrainC,sx,sy,sw,sh,sx,sy,sw,sh);
+  } else {
+    for(let b of BIO){X.fillStyle=b.c;X.fillRect(b.x,b.y,b.w,b.h);}
+  }
+
+  // ── Animated water shimmer (drawn on top of baked water) ──
+  for(let w of water){
+    X.fillStyle='rgba(80,150,200,.04)';
+    let rx=Math.sin(gt*.4)*w.rx*.15;
+    X.beginPath();X.ellipse(w.x+rx,w.y-w.ry*.15,w.rx*.25,w.ry*.1,0,0,Math.PI*2);X.fill();
+    let rp=(gt*.7)%3;
+    X.strokeStyle='rgba(100,170,210,.03)';X.lineWidth=1;
+    X.beginPath();X.ellipse(w.x,w.y,w.rx*.25+rp*45,w.ry*.25+rp*28,0,0,Math.PI*2);X.stroke();
+  }
+
+  // ── Shadowmere animated mist ──
+  let sb=BIO.find(b=>b.n.includes('Shadowmere'));
+  if(sb){
+    X.fillStyle='rgba(25,15,50,.05)';
+    for(let i=0;i<6;i++){
+      let mx=sb.x+((i*523+37)%sb.w),my=sb.y+((i*791+59)%sb.h);
+      X.beginPath();X.arc(mx+Math.sin(gt*.25+i)*15,my+Math.cos(gt*.18+i)*12,50,0,Math.PI*2);X.fill();
+    }
+  }
+
+  // ── Towns ──
+  for(let t of TWN){
+    if(!t.v||t.x<vl-100||t.x>vr+100||t.y<vt-100||t.y>vb+100)continue;
+
+    if(t.merchant){
+      // Merchant — distinct cart/tent look
+      // Ground mat
+      X.fillStyle='rgba(212,168,67,.06)';X.beginPath();X.arc(t.x,t.y,t.r,0,Math.PI*2);X.fill();
+      // Tent
+      X.fillStyle='#5a4530';
+      X.beginPath();X.moveTo(t.x-14,t.y+6);X.lineTo(t.x,t.y-12);X.lineTo(t.x+14,t.y+6);X.closePath();X.fill();
+      X.fillStyle='#6a5538';
+      X.beginPath();X.moveTo(t.x-12,t.y+6);X.lineTo(t.x,t.y-9);X.lineTo(t.x+12,t.y+6);X.closePath();X.fill();
+      // Tent opening
+      X.fillStyle='rgba(0,0,0,.2)';X.fillRect(t.x-3,t.y-2,6,8);
+      // Gold coin icon
+      X.fillStyle='rgba(212,168,67,.7)';X.beginPath();X.arc(t.x,t.y-16,5,0,Math.PI*2);X.fill();
+      X.fillStyle='rgba(180,140,40,.9)';X.font='700 7px "IBM Plex Sans"';X.textAlign='center';X.textBaseline='middle';
+      X.fillText('$',t.x,t.y-16);X.textBaseline='alphabetic';
+      // Name
+      X.fillStyle='rgba(0,0,0,.35)';X.font='600 13px "IBM Plex Sans"';X.textAlign='center';
+      X.fillText(t.n,t.x+1,t.y-t.r-6);
+      X.fillStyle='#d4a843';X.fillText(t.n,t.x,t.y-t.r-7);
+    } else {
+      // Regular town
+      X.fillStyle='rgba(140,120,80,.1)';X.beginPath();X.arc(t.x,t.y,t.r+8,0,Math.PI*2);X.fill();
+      X.fillStyle='rgba(160,140,100,.08)';X.beginPath();X.arc(t.x,t.y,t.r,0,Math.PI*2);X.fill();
+      for(let i=0;i<8;i++){
+        let a=i*.78+.2,rd=t.r*.5;
+        let bx=t.x+Math.cos(a)*rd,by=t.y+Math.sin(a)*rd;
+        let bw=8+Math.sin(i*2.3)*3,bh=10+Math.cos(i*1.7)*4;
+        X.fillStyle='rgba(0,0,0,.06)';X.fillRect(bx-bw/2+2,by-bh+bh+2,bw,4);
+        X.fillStyle=i%2?'#504030':'#5a4a38';X.fillRect(bx-bw/2,by-bh,bw,bh+2);
+        X.fillStyle=i%2?'#6a5030':'#7a5a38';
+        X.beginPath();X.moveTo(bx-bw/2-2,by-bh);X.lineTo(bx,by-bh-8);X.lineTo(bx+bw/2+2,by-bh);X.fill();
+        X.fillStyle='rgba(255,200,80,.15)';X.fillRect(bx-1.5,by-bh+3,3,4);
+      }
+      X.fillStyle='rgba(0,0,0,.35)';X.font='600 13px "IBM Plex Sans"';X.textAlign='center';
+      X.fillText(t.n,t.x+1,t.y-t.r-10);
+      X.fillStyle='#d4d0c8';X.fillText(t.n,t.x,t.y-t.r-11);
+    }
+  }
+
+  // FOG OF WAR
+  X.drawImage(fogC,0,0,FW,FH,0,0,WW,WH);
+
+  // Quest marker (drawn on top of fog so player can see direction)
+  if(P.tx&&(aQ||grinding||cT)){
+    let tdx=P.tx-P.x,tdy=P.ty-P.y,td=Math.hypot(tdx,tdy);
+    if(td>5){
+      // Animated flowing dashed line toward target
+      let dashOff=gt*40; // animate dash flow
+      X.strokeStyle='rgba(212,168,67,.18)';X.setLineDash([10,8]);X.lineDashOffset=-dashOff;X.lineWidth=1.5;
+      X.beginPath();X.moveTo(P.x,P.y);X.lineTo(P.tx,P.ty);X.stroke();X.setLineDash([]);X.lineDashOffset=0;
+
+      // Pulsing ring at destination
+      if(!cT){
+        let pulse=8+Math.sin(gt*3)*3;
+        X.strokeStyle='rgba(212,168,67,'+(0.3+Math.sin(gt*3)*.15)+')';X.lineWidth=2;
+        X.beginPath();X.arc(P.tx,P.ty,pulse,0,Math.PI*2);X.stroke();
+        X.strokeStyle='rgba(212,168,67,.1)';X.lineWidth=1;
+        X.beginPath();X.arc(P.tx,P.ty,pulse+8,0,Math.PI*2);X.stroke();
+        // Inner dot
+        X.fillStyle='rgba(212,168,67,.5)';X.beginPath();X.arc(P.tx,P.ty,3,0,Math.PI*2);X.fill();
+        // Distance label at target
+        if(td>80){
+          X.fillStyle='rgba(212,168,67,.5)';X.font='600 10px "IBM Plex Mono"';X.textAlign='center';
+          X.fillText(Math.round(td)+'m',P.tx,P.ty+pulse+16);
+        }
+      }
+    }
+  }
+  // Edge-of-screen arrow when target is off-screen
+  if(P.tx&&(aQ||grinding)&&!cT){
+    let sx=(P.tx-cam.x)*ZOOM+W/2-W/2,sy=(P.ty-cam.y)*ZOOM+H/2-H/2;
+    // Simpler: check if target is in world-view
+    let vw=W/ZOOM,vh=H/ZOOM;
+    let offL=P.tx<cam.x,offR=P.tx>cam.x+vw,offT=P.ty<cam.y,offB=P.ty>cam.y+vh;
+    if(offL||offR||offT||offB){
+      let screenTx=(P.tx-cam.x)*ZOOM,screenTy=(P.ty-cam.y)*ZOOM;
+      let margin=50;
+      let cx=Math.max(margin,Math.min(W-margin,screenTx));
+      let cy=Math.max(margin,Math.min(H-margin,screenTy));
+      let ang=Math.atan2(P.ty-P.y,P.tx-P.x);
+      X.save();X.setTransform(1,0,0,1,0,0);
+      X.translate(cx,cy);X.rotate(ang);
+      let pulse=.5+Math.sin(gt*4)*.2;
+      X.fillStyle='rgba(212,168,67,'+pulse+')';
+      X.beginPath();X.moveTo(12,0);X.lineTo(-6,-7);X.lineTo(-3,0);X.lineTo(-6,7);X.closePath();X.fill();
+      let td=Math.hypot(P.tx-P.x,P.ty-P.y);
+      X.rotate(-ang);
+      X.fillStyle='rgba(212,168,67,.6)';X.font='600 11px "IBM Plex Mono"';X.textAlign='center';
+      X.fillText(Math.round(td)+'m',0,20);
+      X.restore();
+    }
+  }
+  // Enemies — clean dots with glow
+  for(let e of ens){
+    if(e.dead||e.x<vl||e.x>vr||e.y<vt||e.y>vb)continue;
+    let r=6;
+    // Pulsing glow ring
+    let pulse=.12+Math.sin(gt*3+e.x*.01)*.06;
+    X.globalAlpha=pulse;X.fillStyle=e.c;
+    X.beginPath();X.arc(e.x,e.y,r+7,0,Math.PI*2);X.fill();
+    X.globalAlpha=1;
+    // Core dot
+    X.fillStyle=e.c;X.beginPath();X.arc(e.x,e.y,r,0,Math.PI*2);X.fill();
+    // Bright center
+    X.fillStyle='rgba(255,255,255,.2)';X.beginPath();X.arc(e.x-1,e.y-1,r*.4,0,Math.PI*2);X.fill();
+    // HP bar only when damaged
+    if(e.hp<e.mhp){
+      X.fillStyle='rgba(0,0,0,.5)';X.fillRect(e.x-10,e.y-r-8,20,3);
+      X.fillStyle='#c04040';X.fillRect(e.x-9,e.y-r-7,18*(e.hp/e.mhp),1.5);
+    }
+    // Name only when player is close
+    let pd=Math.hypot(P.x-e.x,P.y-e.y);
+    if(pd<120){
+      X.fillStyle='rgba(255,255,255,'+(pd<60?.3:.12)+')';
+      X.font='500 9px "IBM Plex Sans"';X.textAlign='center';
+      X.fillText(e.n,e.x,e.y-r-10);
+    }
+  }
+  // Player cursor
+  X.fillStyle='rgba(212,168,67,.1)';X.beginPath();X.arc(P.x,P.y,20,0,Math.PI*2);X.fill(); // soft gold glow
+  X.fillStyle='rgba(0,0,0,.15)';X.beginPath();X.ellipse(P.x,P.y+10,10,4,0,0,Math.PI*2);X.fill();
+  X.save();X.translate(P.x,P.y);X.rotate(P.ang);
+  X.fillStyle='#f0ece0';X.strokeStyle='#1a1a1a';X.lineWidth=2;
+  X.beginPath();X.moveTo(0,-19);X.lineTo(-9,13);X.lineTo(0,7);X.lineTo(9,13);X.closePath();X.fill();X.stroke();
+  X.restore();
+  // Effects
+  for(let f of flts){X.globalAlpha=Math.min(1,f.life);X.font='600 13px "IBM Plex Mono"';X.textAlign='center';X.fillStyle='rgba(0,0,0,.25)';X.fillText(f.tx,f.x+1,f.y+1);X.fillStyle=f.c;X.fillText(f.tx,f.x,f.y);X.globalAlpha=1;}
+  for(let p of parts){X.globalAlpha=p.life;X.fillStyle=p.c;X.fillRect(p.x-p.s/2,p.y-p.s/2,p.s,p.s);X.globalAlpha=1;}
+  X.restore();
+}
+function drawMM(){
+  let mw=180,mh=180;
+  MX.fillStyle='#09090c';MX.fillRect(0,0,mw,mh);
+  let sx=mw/WW,sy=mh/WH;
+  // Terrain
+  if(terrainReady){MX.drawImage(terrainC,0,0,WW,WH,0,0,mw,mh);}
+  else{for(let b of BIO){MX.fillStyle=b.c;MX.fillRect(b.x*sx,b.y*sy,b.w*sx,b.h*sy);}}
+  // Fog on minimap
+  MX.drawImage(fogC,0,0,FW,FH,0,0,mw,mh);
+  // Roads (over fog slightly visible as explored paths)
+  MX.strokeStyle='rgba(200,180,140,.1)';MX.lineWidth=1;
+  for(let r of RD){MX.beginPath();MX.moveTo(r[0][0]*sx,r[0][1]*sy);for(let i=1;i<r.length;i++)MX.lineTo(r[i][0]*sx,r[i][1]*sy);MX.stroke();}
+  // Towns — small labeled dots
+  for(let t of TWN){
+    if(!t.v)continue;
+    MX.fillStyle='rgba(212,168,67,.7)';
+    MX.beginPath();MX.arc(t.x*sx,t.y*sy,2.5,0,Math.PI*2);MX.fill();
+    MX.fillStyle='rgba(212,168,67,.35)';MX.font='500 7px "IBM Plex Sans"';MX.textAlign='center';
+    MX.fillText(t.n,t.x*sx,t.y*sy-5);
+  }
+  // Enemies
+  for(let e of ens){if(e.dead)continue;MX.fillStyle='rgba(192,64,64,.6)';MX.beginPath();MX.arc(e.x*sx,e.y*sy,1.5,0,Math.PI*2);MX.fill();}
+  // Quest target — line from player + pulsing marker
+  if(P.tx&&(aQ||grinding)){
+    // Line
+    MX.strokeStyle='rgba(212,168,67,.3)';MX.lineWidth=1;MX.setLineDash([2,2]);
+    MX.beginPath();MX.moveTo(P.x*sx,P.y*sy);MX.lineTo(P.tx*sx,P.ty*sy);MX.stroke();MX.setLineDash([]);
+    // Pulsing target ring
+    let pr=3+Math.sin(gt*3)*1.5;
+    MX.strokeStyle='rgba(212,168,67,.5)';MX.lineWidth=1;
+    MX.beginPath();MX.arc(P.tx*sx,P.ty*sy,pr,0,Math.PI*2);MX.stroke();
+    MX.fillStyle='rgba(212,168,67,.4)';
+    MX.beginPath();MX.arc(P.tx*sx,P.ty*sy,1.5,0,Math.PI*2);MX.fill();
+  }
+  // Player — white dot with direction indicator
+  let px=P.x*sx,py=P.y*sy;
+  MX.fillStyle='rgba(255,255,255,.15)';MX.beginPath();MX.arc(px,py,5,0,Math.PI*2);MX.fill();
+  MX.fillStyle='#fff';MX.beginPath();MX.arc(px,py,2.5,0,Math.PI*2);MX.fill();
+  // Direction tick
+  let ddx=Math.sin(P.ang),ddy=-Math.cos(P.ang);
+  MX.strokeStyle='rgba(255,255,255,.5)';MX.lineWidth=1.5;MX.lineCap='round';
+  MX.beginPath();MX.moveTo(px+ddx*3,py+ddy*3);MX.lineTo(px+ddx*7,py+ddy*7);MX.stroke();
+  // Viewport rectangle
+  MX.strokeStyle='rgba(255,255,255,.12)';MX.lineWidth=1;
+  MX.strokeRect(cam.x*sx,cam.y*sy,W*sx,H*sy);
+}
+
+// ═══ UTILS ═══
+function spawn(t,x,y){let e=ET.find(ee=>ee.n===t);if(!e)return;ens.push({...e,x:x+Math.random()*120-60,y:y+Math.random()*120-60,mhp:e.hp,dead:false});}
+function lg(t,c='sy'){let el=document.getElementById('log'),d=document.createElement('div');d.className='le '+c;d.textContent=t;el.appendChild(d);el.scrollTop=el.scrollHeight;while(el.children.length>22)el.removeChild(el.firstChild);}
+function nf(t,s,c=''){let n=document.createElement('div');n.className='nf '+c;n.innerHTML='<div class="nft">'+t+'</div><div class="nfs">'+s+'</div>';document.getElementById('nfs').appendChild(n);setTimeout(()=>{if(n.parentNode)n.remove()},3400);}
+function ft(x,y,t,c){flts.push({x,y,tx:t,c,life:1.3,vy:-1});}
+function pt(x,y,c,n){for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-.5)*2.5,vy:(Math.random()-.5)*2.5,s:2+Math.random()*2.5,c,life:.9});}
+
+function gXp(a){a=Math.floor(a*(1+P.xpB));P.xp+=a;ft(P.x,P.y-20,'+'+a+' xp','#5a9a4a');while(P.xp>=P.xpN){P.xp-=P.xpN;P.lv++;P.sp++;P.xpN=Math.floor(P.xpN*1.3);P.atk++;P.def++;nf('Level '+P.lv,'+1 Skill Point');lg('Level up! Lv.'+P.lv+' (+1 SP)','qt');pt(P.x,P.y,'#d4a843',16);}}
+function gGd(a){a=Math.floor(a*(1+P.goldB));P.gold+=a;ft(P.x,P.y-36,'+'+a+'g','#d4a843');}
+
+function updateHUD(){
+  document.getElementById('hLv').textContent=P.lv;
+  document.getElementById('hXp').style.width=(P.xp/P.xpN*100)+'%';
+  document.getElementById('hXpT').textContent=P.xp+'/'+P.xpN;
+  document.getElementById('hGd').textContent=P.gold;
+  document.getElementById('hA').textContent=P.atk;
+  document.getElementById('hS').textContent=P.moveSpd.toFixed(1);
+  document.getElementById('hQ').textContent=P.qd;
+  let qh=document.getElementById('qhud');
+  if(aQ){qh.classList.remove('h');document.getElementById('qhn').textContent=(aQ.ch?'Ch.'+aQ.ch+' · ':'')+aQ.n;let s=aQ.st[sI];let t=s?s.tx:'...';if(s&&s.t==='combat')t+=' ('+cK+'/'+s.ct+')';if(s&&(s.t==='travel'||s.t==='discover')&&P.tx){t+=' — '+Math.round(Math.hypot(P.tx-P.x,P.ty-P.y))+'m';}document.getElementById('qhs').textContent=t;}
+  else if(grinding){qh.classList.remove('h');document.getElementById('qhn').textContent='Grinding';document.getElementById('qhs').textContent='Need Lv.'+grindLv;}
+  else qh.classList.add('h');
+  document.getElementById('blbl').textContent=(bio(P.x,P.y)||{n:''}).n;
+  document.getElementById('bPick').style.display=P.autoQ?'none':'';
+  document.getElementById('cHint').style.display=P.autoQ?'none':'';
+  document.getElementById('stats').innerHTML='Kills: '+P.kills+' · ATK SPD: '+P.atkSpd.toFixed(1)+'x · Crit: '+Math.round(P.crit*100)+'% · Explored: '+P._expl+'%';
+}
+
+function buySk(id){let s=SKILLS.find(ss=>ss.id===id);if(!s||owned.has(id))return;if(s.req&&!owned.has(s.req))return;if(P.sp<s.cost)return;P.sp-=s.cost;owned.add(id);s.fn();lg('Unlocked: '+s.n,'rw');nf('Skill Unlocked',s.n);pt(P.x,P.y,'#d4a843',10);renderTree();}
+
+// ═══ RELIC SYSTEM ═══
+function grantRelic(id){
+  if(ownedRelics.has(id))return;
+  let r=RELICS.find(rr=>rr.id===id);if(!r)return;
+  ownedRelics.add(id);r.fn();
+}
+function removeRelic(id){
+  // Note: stat removal would need inverse fn — for simplicity, selling just removes ownership
+  ownedRelics.delete(id);
+}
+
+// ═══ MERCHANT SHOP ═══
+function checkMerchant(){
+  let m=TWN.find(t=>t.merchant);
+  if(!m){nearMerchant=false;return;}
+  let d=Math.hypot(P.x-m.x,P.y-m.y);
+  let wasNear=nearMerchant;
+  nearMerchant=d<80;
+  document.getElementById('merchant-prompt').classList.toggle('h',!nearMerchant||shopOpen);
+}
+
+function openShop(){
+  shopOpen=true;shopMode='buy';
+  document.getElementById('shop').classList.remove('h');
+  document.getElementById('merchant-prompt').classList.add('h');
+  renderShop();
+}
+function closeShop(){
+  shopOpen=false;
+  document.getElementById('shop').classList.add('h');
+}
+function shopTab(el){
+  document.querySelectorAll('.shop-tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');shopMode=el.dataset.st;renderShop();
+}
+
+function buyRelic(id){
+  let r=RELICS.find(rr=>rr.id===id);
+  if(!r||ownedRelics.has(id)||P.gold<r.price)return;
+  P.gold-=r.price;
+  grantRelic(id);
+  lg('Purchased: '+r.n,'rw');nf('Relic Acquired',r.n);
+  pt(P.x,P.y,'#d4a843',12);
+  renderShop();updateHUD();renderP();
+}
+
+function sellRelic(id){
+  let r=RELICS.find(rr=>rr.id===id);
+  if(!r||!ownedRelics.has(id)||r.quest)return; // can't sell quest relics
+  P.gold+=r.sell;
+  removeRelic(id);
+  lg('Sold: '+r.n+' for '+r.sell+'g','rw');
+  renderShop();updateHUD();renderP();
+}
+
+function renderShop(){
+  document.getElementById('shopGold').textContent=P.gold;
+  let h='';
+  if(shopMode==='buy'){
+    let buyable=RELICS.filter(r=>!r.quest); // can't buy quest relics
+    if(!buyable.length){h='<div style="padding:20px;color:var(--tx3)">Nothing for sale.</div>';}
+    for(let r of buyable){
+      let has=ownedRelics.has(r.id);
+      let canBuy=!has&&P.gold>=r.price;
+      h+='<div class="sr">';
+      h+='<div class="sr-ico">'+r.ico+'</div>';
+      h+='<div class="sr-info"><div class="sr-name">'+r.n+'</div><div class="sr-desc">'+r.d+'</div><div class="sr-effect">'+r.effect+'</div></div>';
+      h+='<div class="sr-right">';
+      if(has){
+        h+='<div class="sr-owned">Owned</div>';
+      } else {
+        h+='<div class="sr-price">'+r.price+'g</div>';
+        h+='<button class="sr-btn'+(canBuy?'':' cant')+'" onclick="buyRelic(\''+r.id+'\')">Buy</button>';
+      }
+      h+='</div></div>';
+    }
+  } else {
+    let sellable=RELICS.filter(r=>ownedRelics.has(r.id)&&!r.quest);
+    if(!sellable.length){h='<div style="padding:20px;color:var(--tx3);font-size:14px">No relics to sell.'+(ownedRelics.size?'<br><span style="font-size:12px;margin-top:6px;display:block">Quest relics cannot be sold.</span>':'')+'</div>';}
+    for(let r of sellable){
+      h+='<div class="sr">';
+      h+='<div class="sr-ico">'+r.ico+'</div>';
+      h+='<div class="sr-info"><div class="sr-name">'+r.n+'</div><div class="sr-desc">'+r.d+'</div><div class="sr-effect">'+r.effect+'</div></div>';
+      h+='<div class="sr-right">';
+      h+='<div class="sr-price" style="color:var(--gn)">+'+r.sell+'g</div>';
+      h+='<button class="sr-btn sell" onclick="sellRelic(\''+r.id+'\')">Sell</button>';
+      h+='</div></div>';
+    }
+  }
+  document.getElementById('shopBody').innerHTML=h;
+}
+
+// ═══ SKILL TREE UI ═══
+function openTree(){
+  document.getElementById('stree').classList.remove('str-hide');
+  document.getElementById('stSp').textContent=P.sp;
+  renderTree();
+}
+function closeTree(){document.getElementById('stree').classList.add('str-hide');}
+
+function renderTree(){
+  document.getElementById('stSp').textContent=P.sp;
+  let cats=[{id:'dmg',label:'Damage'},{id:'mob',label:'Mobility'},{id:'util',label:'Utility'}];
+  let h='';
+  for(let cat of cats){
+    let skills=SKILLS.filter(s=>s.cat===cat.id);
+    let maxRow=Math.max(...skills.map(s=>s.row));
+    h+='<div class="str-col '+cat.id+'">';
+    h+='<div class="str-col-title">'+cat.label+'</div>';
+    h+='<div class="str-nodes">';
+    for(let r=0;r<=maxRow;r++){
+      let rowSkills=skills.filter(s=>s.row===r);
+      if(r>0){
+        let anyOwned=skills.filter(s=>s.row<r).some(s=>owned.has(s.id));
+        h+='<div class="str-conn'+(anyOwned?' lit':'')+'"></div>';
+      }
+      h+='<div class="str-row">';
+      for(let s of rowSkills){
+        let has=owned.has(s.id);
+        let unlocked=!s.req||owned.has(s.req);
+        let afford=!has&&unlocked&&P.sp>=s.cost;
+        let cls='sn';
+        if(has)cls+=' has';
+        else if(afford)cls+=' afford';
+        else if(unlocked)cls+=' avail';
+        else cls+=' locked';
+        let click=has||(!unlocked)||P.sp<s.cost?'':'onclick="buySk(\''+s.id+'\')"';
+        let reqName=s.req?SKILLS.find(ss=>ss.id===s.req)?.n:'';
+        h+='<div class="'+cls+'" '+click+'>';
+        h+='<div class="sn-tip"><div class="sn-tip-name">'+s.n+'</div><div class="sn-tip-desc">'+s.d+'</div>';
+        if(has)h+='<div class="sn-tip-cost owned">✓ Owned</div>';
+        else h+='<div class="sn-tip-cost">'+s.cost+' SP</div>';
+        if(!has&&!unlocked)h+='<div class="sn-tip-req">Requires: '+reqName+'</div>';
+        h+='</div>';
+        h+='<div class="sn-ico">'+s.ico+'</div>';
+        h+='<div class="sn-cost">'+(has?'✓':s.cost+'sp')+'</div>';
+        h+='<div class="sn-name">'+s.n+'</div>';
+        if(r<maxRow&&skills.some(ss=>ss.req===s.id))h+='<div class="sn-line"></div>';
+        h+='</div>';
+      }
+      h+='</div>';
+    }
+    h+='</div></div>';
+  }
+  document.getElementById('strCols').innerHTML=h;
+  let total=SKILLS.length,got=owned.size;
+  document.getElementById('strTip').textContent=got+' / '+total+'skills unlocked';
+}
+
+// ═══ DIALOGUE ═══
+function startDlg(w,t){dlgOn=true;dlgW=w;dlgF=t;dlgCI=0;dlgTm=0;document.getElementById('dlg').classList.remove('h');document.getElementById('dW').textContent=w;document.getElementById('dT').textContent='';}
+function updateDlg(dt){if(!dlgOn)return;let cps=30*P.dlgSpd;dlgTm+=dt*cps;let tgt=Math.min(Math.floor(dlgTm),dlgF.length);if(tgt!==dlgCI){dlgCI=tgt;document.getElementById('dT').textContent=dlgF.substring(0,dlgCI)+(dlgCI<dlgF.length?'▊':'');}if(dlgCI>=dlgF.length){dlgTm+=dt*3;if(dlgTm>dlgF.length+30*P.dlgSpd){dlgOn=false;document.getElementById('dlg').classList.add('h');if(aQ)advStep();}}}
+
+// ═══ QUESTS ═══
+function startQst(id){if(aQ)return;let q=QS.find(qq=>qq.id===id);if(!q||doneQ.has(q.id))return;if(q.lr>P.lv){lg('Need level '+q.lr,'sy');return;}grinding=false;grindLv=null;aQ=q;sI=0;cK=0;cT=null;dlgI=0;ens=ens.filter(e=>e.dead);lg('Quest: '+q.n,'qt');beginStep();renderP();}
+function beginStep(){if(!aQ)return;let s=aQ.st[sI];if(!s){compQ();return;}if(s.t==='dlg'){let d=aQ.dlg[dlgI];if(d){startDlg(d.w,d.t);dlgI++;}else advStep();}else if(s.t==='travel'||s.t==='discover'){lg(s.tx,'tv');let tx=s.x,ty=s.y;P.tx=tx||P.x;P.ty=ty||P.y;if(P.autoQ)P.mv=true;cT=null;}else if(s.t==='combat'){lg(s.tx,'tv');cN=s.ct;cK=0;for(let i=0;i<s.ct;i++)spawn(s.en,P.x,P.y);P.mv=false;cT=null;findEn();}}
+function advStep(){if(!aQ)return;let s=aQ.st[sI];if(s&&s.t==='discover'&&s.en){let tw=TWN.find(t=>t.n===s.en);if(tw&&!tw.v){tw.v=true;lg('Discovered '+tw.n,'qt');nf(tw.n,tw.d,'tw');pt(tw.x,tw.y,'#d4a843',14);}}sI++;if(sI>=aQ.st.length)compQ();else beginStep();renderP();}
+function findEn(){let a=ens.filter(e=>!e.dead);if(!a.length){cT=null;P.mv=false;return;}let n=a.reduce((a,b)=>dst(P,a)<dst(P,b)?a:b);cT=n;P.tx=n.x;P.ty=n.y;if(P.autoQ)P.mv=true;}
+function compQ(){
+  if(!aQ)return;let q=aQ;doneQ.add(q.id);P.qd++;
+  // Lucky Coin — stacking +1% rewards per quest completed
+  let luckyBonus=ownedRelics.has('lucky')?1+(P.qd-1)*.01:1;
+  let xpRw=Math.floor(q.rw.e*luckyBonus),gdRw=Math.floor(q.rw.g*luckyBonus);
+  gXp(xpRw);gGd(gdRw);
+  let bonusTxt=luckyBonus>1?' (🪙+'+Math.round((luckyBonus-1)*100)+'%)':'';
+  lg('✓ '+q.n+' — +'+xpRw+'xp +'+gdRw+'g'+bonusTxt,'qt');nf('Quest Complete',q.n+' — +'+xpRw+' xp, +'+gdRw+' gold'+bonusTxt);
+  // Chrono Crystal — stacking +1% move speed per quest completed
+  if(ownedRelics.has('chrono')){P.moveSpd+=.01;}
+  // Grant Waystone relic after intro quest
+  if(q.id==='m1'&&!ownedRelics.has('waystone')){
+    grantRelic('waystone');
+    setTimeout(()=>nf('✦ Relic Acquired','Waystone of Guidance — Your cursor now auto-navigates the realm'),500);
+    lg('✦ Relic: Waystone of Guidance acquired!','rw');
+  }
+  if(q.lore){lore.push({title:q.n,text:q.lore,ch:q.ch||0});lg('New lore','lr');}if(q.ul)for(let u of q.ul)openQ.add(u);aQ=null;sI=0;P.mv=false;P.tx=0;P.ty=0;cT=null;if(P.autoQ)setTimeout(()=>{if(!aQ)autoPick()},1000);renderP();}
+function autoPick(){if(aQ)return;let av=QS.filter(q=>openQ.has(q.id)&&!doneQ.has(q.id)&&q.lr<=P.lv);let mn=av.filter(q=>q.tp==='M');let p=mn.length?mn[0]:av[0];if(p){startQst(p.id);return;}let nxt=QS.filter(q=>openQ.has(q.id)&&!doneQ.has(q.id));if(nxt.length){let nd=Math.min(...nxt.map(q=>q.lr));if(P.lv<nd)startGrind(nd);}}
+function manPick(){if(aQ)return;autoPick();}
+
+// ═══ GRINDING ═══
+function startGrind(lv){grinding=true;grindLv=lv;lg('Grinding to lv.'+lv+'…','sy');spawnGr();}
+function spawnGr(){if(!grinding)return;let ok=ET.filter((_,i)=>i<Math.min(P.lv+1,ET.length));let e=ok[ok.length-1];let a=Math.random()*Math.PI*2;let sx=Math.max(80,Math.min(WW-80,P.x+Math.cos(a)*150)),sy=Math.max(80,Math.min(WH-80,P.y+Math.sin(a)*150));for(let i=0;i<3;i++)spawn(e.n,sx,sy);cT=null;findEn();}
+function checkGr(){if(!grinding)return;if(P.lv>=grindLv){grinding=false;grindLv=null;lg('Level reached!','qt');if(P.autoQ)autoPick();return;}if(!ens.filter(e=>!e.dead).length)setTimeout(()=>{if(grinding)spawnGr()},400);}
+
+// ═══ COMBAT ═══
+function doCombat(dt){
+  if(!cT||cT.dead){findEn();if(!ens.filter(e=>!e.dead).length&&grinding)checkGr();return;}
+  let d=dst(P,cT);
+  if(d<P.combatRange){
+    P.mv=false;ctmr+=dt;
+    if(ctmr>=.45/P.atkSpd){
+      ctmr=0;
+      let hits=1;if(Math.random()<P.multi)hits=2;
+      for(let h=0;h<hits;h++){
+        let dmg=Math.max(1,P.atk-(cT.a*.08|0)+(Math.random()*4|0));
+        let isCrit=Math.random()<P.crit;if(isCrit)dmg=Math.floor(dmg*P.critDmg);
+        cT.hp-=dmg;
+        ft(cT.x+(Math.random()*14-7),cT.y-cT.s-6-(h*14),isCrit?dmg+'!':'-'+dmg,isCrit?'#ffd700':'#c04040');
+        pt(cT.x,cT.y,cT.c,2);
+        if(P.lifesteal>0)P.hp=Math.min(P.maxHp,P.hp+dmg*P.lifesteal);
+        // AOE
+        if(P.aoe&&h===0){for(let oe of ens){if(oe.dead||oe===cT)continue;if(dst(cT,oe)<60){oe.hp-=Math.floor(dmg*.5);ft(oe.x,oe.y-oe.s-6,'-'+Math.floor(dmg*.5),'#c04040');if(oe.hp<=0){oe.dead=true;gXp(oe.xp);gGd(oe.g);P.kills++;pt(oe.x,oe.y,oe.c,8);}}}}
+      }
+      let ed=Math.max(0,cT.a-P.def+(Math.random()*2|0));
+      if(ed>0){P.hp=Math.max(1,P.hp-ed);ft(P.x+(Math.random()*8-4),P.y+16,'-'+ed,'#c04040');}
+      if(cT.hp<=0){
+        cT.dead=true;lg('Defeated '+cT.n,'cb');gXp(cT.xp);gGd(cT.g);pt(cT.x,cT.y,cT.c,12);P.kills++;
+        if(aQ){cK++;let s=aQ.st[sI];if(s&&s.t==='combat'&&cK>=cN){cT=null;setTimeout(()=>advStep(),200);return;}}
+        if(grinding){cT=null;if(!ens.filter(e=>!e.dead).length)checkGr();else findEn();return;}
+        findEn();
+      }
+    }
+  } else{if(P.autoQ){P.tx=cT.x;P.ty=cT.y;P.mv=true;}}
+}
+
+// ═══ INPUT ═══
+const keys={};
+addEventListener('keydown',e=>{
+  keys[e.code]=true;
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();
+  if(e.code==='Escape'){closeTree();closeMap();closeShop();}
+  if(e.code==='KeyM'&&on&&!shopOpen)toggleMap();
+  if(e.code==='KeyE'&&on){
+    if(shopOpen)closeShop();
+    else if(nearMerchant)openShop();
+  }
+});
+addEventListener('keyup',e=>{keys[e.code]=false;});
+addEventListener('blur',()=>{for(let k in keys)keys[k]=false;});
+
+// ═══ FULL MAP ═══
+let mapOn=false;
+function toggleMap(){mapOn?closeMap():openMap();}
+function openMap(){mapOn=true;document.getElementById('fmap').classList.remove('h');drawFMap();}
+function closeMap(){mapOn=false;document.getElementById('fmap').classList.add('h');}
+function drawFMap(){
+  if(!mapOn)return;
+  let fc=document.getElementById('fmc'),fx=fc.getContext('2d');
+  let wrap=fc.parentElement;fc.width=wrap.clientWidth;fc.height=wrap.clientHeight;
+  let mw=fc.width,mh=fc.height;
+  let sc=Math.min(mw/WW,mh/WH);
+  let ox=(mw-WW*sc)/2,oy=(mh-WH*sc)/2;
+  fx.fillStyle='#06060a';fx.fillRect(0,0,mw,mh);
+  fx.save();fx.translate(ox,oy);fx.scale(sc,sc);
+  if(terrainReady)fx.drawImage(terrainC,0,0,WW,WH);
+  else{for(let b of BIO){fx.fillStyle=b.c;fx.fillRect(b.x,b.y,b.w,b.h);}}
+  fx.drawImage(fogC,0,0,FW,FH,0,0,WW,WH);
+  // Towns
+  fx.font='600 24px "IBM Plex Sans"';fx.textAlign='center';
+  for(let t of TWN){
+    if(!t.v)continue;
+    fx.fillStyle='rgba(212,168,67,.5)';fx.beginPath();fx.arc(t.x,t.y,14,0,Math.PI*2);fx.fill();
+    fx.fillStyle='rgba(0,0,0,.4)';fx.fillText(t.n,t.x+1,t.y-22);
+    fx.fillStyle='#d4d0c8';fx.fillText(t.n,t.x,t.y-23);
+  }
+  // Quest target
+  if(P.tx&&(aQ||grinding)){
+    fx.strokeStyle='rgba(212,168,67,.35)';fx.setLineDash([10,8]);fx.lineWidth=2.5;
+    fx.beginPath();fx.moveTo(P.x,P.y);fx.lineTo(P.tx,P.ty);fx.stroke();fx.setLineDash([]);
+    fx.fillStyle='rgba(212,168,67,.4)';fx.beginPath();fx.arc(P.tx,P.ty,12,0,Math.PI*2);fx.fill();
+  }
+  // Player
+  fx.fillStyle='rgba(255,255,255,.15)';fx.beginPath();fx.arc(P.x,P.y,22,0,Math.PI*2);fx.fill();
+  fx.fillStyle='#fff';fx.beginPath();fx.arc(P.x,P.y,8,0,Math.PI*2);fx.fill();
+  fx.restore();
+}
+
+function getIn(){
+  let dx=0,dy=0;
+  if(keys['KeyW']||keys['ArrowUp'])dy=-1;
+  if(keys['KeyS']||keys['ArrowDown'])dy=1;
+  if(keys['KeyA']||keys['ArrowLeft'])dx=-1;
+  if(keys['KeyD']||keys['ArrowRight'])dx=1;
+  if(dx||dy){let m=Math.hypot(dx,dy);dx/=m;dy/=m;}
+  return{dx,dy};
+}
+
+function moveP(dt){
+  let inp=getIn(),man=inp.dx||inp.dy,speed=60*P.moveSpd*dt;
+  if(man){
+    P.x+=inp.dx*speed;P.y+=inp.dy*speed;
+    P.x=Math.max(20,Math.min(WW-20,P.x));P.y=Math.max(20,Math.min(WH-20,P.y));
+    P.ang=Math.atan2(inp.dy,inp.dx)+Math.PI/2;
+    if(aQ&&P.tx){let s=aQ.st[sI];if(s&&(s.t==='travel'||s.t==='discover')&&Math.hypot(P.tx-P.x,P.ty-P.y)<45)advStep();}
+    if(cT&&!cT.dead){P.tx=cT.x;P.ty=cT.y;}
+  } else if(P.autoQ&&P.mv&&P.tx){
+    let dx=P.tx-P.x,dy=P.ty-P.y,d=Math.hypot(dx,dy);
+    if(d<8){P.mv=false;if(aQ){let s=aQ.st[sI];if(s&&(s.t==='travel'||s.t==='discover'))advStep();}return;}
+    let autoSpeed=speed*1.3;
+    let mv=Math.min(autoSpeed,d);
+    P.x+=dx/d*mv;P.y+=dy/d*mv;
+    P.x=Math.max(20,Math.min(WW-20,P.x));P.y=Math.max(20,Math.min(WH-20,P.y));
+    P.ang=Math.atan2(dy,dx)+Math.PI/2;
+  }
+}
+
+// ═══ PANELS ═══
+function togP(){pOn=!pOn;document.getElementById('panel').classList.toggle('h',!pOn);document.getElementById('tog').style.right=pOn?'388px':'8px';document.getElementById('stats').style.right=pOn?'388px':'8px';}
+function stab(el){document.querySelectorAll('.ptb').forEach(t=>t.classList.remove('on'));el.classList.add('on');tab=el.dataset.t;renderP();}
+
+// Position collection tooltips using fixed positioning to avoid clipping
+function posColTip(e){
+  let item=e.currentTarget;
+  let tip=item.querySelector('.col-tip');
+  if(!tip)return;
+  let r=item.getBoundingClientRect();
+  // Position below the item, centered horizontally
+  let left=r.left+r.width/2-100; // 100 = half of tip width (200px)
+  let top=r.bottom+8;
+  // Clamp to viewport
+  if(left<8)left=8;
+  if(left+200>window.innerWidth-8)left=window.innerWidth-208;
+  if(top+100>window.innerHeight-8){top=r.top-tip.offsetHeight-8;} // flip above if near bottom
+  tip.style.left=left+'px';
+  tip.style.top=top+'px';
+}
+
+function renderP(){
+  let h='';
+  if(tab==='quests'){
+    // Sub-tabs: Active | Completed
+    h+='<div class="q-subs"><div class="q-sub'+(qSub==='active'?' on':'')+'" onclick="qSub=\'active\';renderP()">Active</div><div class="q-sub'+(qSub==='done'?' on':'')+'" onclick="qSub=\'done\';renderP()">Completed <span style="font-family:var(--mn);font-size:10px;opacity:.5">'+doneQ.size+'</span></div></div>';
+
+    if(qSub==='active'){
+      if(aQ){let q=aQ,tc='t'+q.tp;h+='<div class="qc on"><div class="qcn">'+(q.ch?'Ch.'+q.ch+' · ':'')+q.n+' <span style="font-size:10px;color:var(--gn)">ACTIVE</span></div><div class="qcd">'+q.ds+'</div><div class="qcr"><span class="qtg '+tc+'">'+({M:'Main',S:'Side',B:'Bounty',G:'Gather'}[q.tp])+'</span><span class="qrw">+'+q.rw.e+'xp +'+q.rw.g+'g</span></div></div><div style="margin-bottom:8px">';for(let i=0;i<q.st.length;i++){let s=q.st[i];if(s.t==='dlg')continue;let dn=i<sI,cr=i===sI,cls=dn?'d':cr?'c':'t',ico=dn?'✓':cr?'▸':'·',ex=cr&&s.t==='combat'?' ('+cK+'/'+s.ct+')':'';h+='<div class="stp '+cls+'"><span class="si">'+ico+'</span>'+s.tx+ex+'</div>';}h+='</div>';}
+      if(grinding)h+='<div class="qc on"><div class="qcn">⚔ Grinding</div><div class="qcd">Gaining XP to reach level '+grindLv+'</div></div>';
+      let av=QS.filter(q=>openQ.has(q.id)&&!doneQ.has(q.id)&&(!aQ||aQ.id!==q.id));
+      if(av.length)h+='<div style="font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;padding:8px 4px 4px">Available</div>';
+      for(let q of av){let lk=q.lr>P.lv,tc='t'+q.tp;h+='<div class="qc'+(lk?' lk':'')+'" '+(lk?'':'onclick="startQst(\''+q.id+'\')"')+'><div class="qcn">'+q.n+'</div><div class="qcd">'+q.ds+'</div><div class="qcr"><span class="qtg '+tc+'">'+({M:'Main',S:'Side',B:'Bounty',G:'Gather'}[q.tp])+'</span><span class="qlv">'+(lk?'🔒 ':'')+'Lv.'+q.lr+'</span><span class="qrw">+'+q.rw.e+'xp +'+q.rw.g+'g</span></div></div>';}
+      if(!aQ&&!av.length&&!grinding)h+='<div class="pe">No quests available. Level up to unlock more.</div>';
+    } else {
+      // Completed sub-tab
+      let dn=QS.filter(q=>doneQ.has(q.id));
+      if(!dn.length)h+='<div class="pe">No completed quests yet.</div>';
+      for(let q of dn){let tc='t'+q.tp;h+='<div class="qc dn"><div class="qcn">✓ '+q.n+'</div><div class="qcd">'+q.ds+'</div><div class="qcr"><span class="qtg '+tc+'">'+({M:'Main',S:'Side',B:'Bounty',G:'Gather'}[q.tp])+'</span><span class="qrw">+'+q.rw.e+'xp +'+q.rw.g+'g</span></div></div>';}
+      h+='<div style="padding:10px 4px;font-size:12px;color:var(--tx3)">'+dn.length+' / '+QS.length+' quests completed</div>';
+    }
+  } else if(tab==='relics'){
+    let relicImg='https://raw.githubusercontent.com/Graphic37/QuestCompleteSolo/main/relic%201.png';
+    if(!ownedRelics.size){
+      h+='<div class="pe">No relics yet. Complete quests or visit the Merchant to acquire relics.</div>';
+    }
+    for(let r of RELICS){
+      let has=ownedRelics.has(r.id);
+      if(!has)continue;
+      h+='<div class="relic">';
+      let ico=r.id==='waystone'?'<img src="'+relicImg+'" style="width:100%;height:100%;object-fit:contain;border-radius:4px;">':'<span style="font-size:26px">'+r.ico+'</span>';
+      h+='<div class="relic-head"><div class="relic-ico">'+ico+'</div><div class="relic-info"><div class="relic-name">'+r.n+'</div><div class="relic-tag">'+(r.quest?'Quest Relic':'Equipped · Relic')+'</div></div></div>';
+      h+='<div class="relic-desc">'+r.d+'</div>';
+      h+='<div class="relic-effect">✦ '+r.effect+'</div>';
+      // Stacking stat display for Chrono and Lucky
+      if(r.id==='chrono')h+='<div class="relic-stack">Current bonus: +'+Math.round(P.qd*1)+'% move speed ('+P.qd+' quests)</div>';
+      if(r.id==='lucky')h+='<div class="relic-stack">Current bonus: +'+Math.round(P.qd*1)+'% rewards ('+P.qd+' quests)</div>';
+      h+='</div>';
+    }
+    h+='<div style="padding:12px 8px;font-size:12px;color:var(--tx3)">'+ownedRelics.size+' / '+RELICS.length+' relics · Visit the Merchant to buy more</div>';
+  } else if(tab==='collection'){
+    let relicGot=RELICS.filter(r=>ownedRelics.has(r.id)).length;
+    let questGot=doneQ.size;
+    let totalPct=Math.round(((relicGot+questGot)/(RELICS.length+QS.length))*100);
+
+    h+='<div style="padding:14px 8px 4px"><div style="font-size:16px;font-weight:700;color:var(--tx)">Collection Log</div>';
+    h+='<div style="font-size:13px;color:var(--tx2);margin-top:4px">'+totalPct+'% complete · '+(relicGot+questGot)+' / '+(RELICS.length+QS.length)+' entries</div></div>';
+    h+='<div class="col-bar col-bar-top"><div class="col-bar-fill" style="width:'+totalPct+'%"></div></div>';
+
+    // Relics
+    h+='<div class="col-section"><div class="col-hdr"><span class="col-hdr-name">Relics</span><span class="col-hdr-count">'+relicGot+' / '+RELICS.length+'</span></div>';
+    h+='<div class="col-bar"><div class="col-bar-fill" style="width:'+Math.round(relicGot/RELICS.length*100)+'%"></div></div>';
+    h+='<div class="col-grid">';
+    for(let i=0;i<RELICS.length;i++){
+      let r=RELICS[i],has=ownedRelics.has(r.id);
+      h+='<div class="col-item '+(has?'got':'miss')+'" onmouseenter="posColTip(event)">';
+      h+='<div class="'+(has?'col-ico':'col-num')+'">'+(has?r.ico:(i+1))+'</div>';
+      h+='<div class="col-tip">';
+      h+='<div class="col-tip-name">'+r.n+'</div>';
+      h+='<div class="col-tip-desc">'+r.d.substring(0,80)+(r.d.length>80?'…':'')+'</div>';
+      h+='<div class="col-tip-effect">'+r.effect+'</div>';
+      h+='<div class="col-tip-divider"></div>';
+      h+='<div class="col-tip-status '+(has?'done':'miss')+'">'+(has?'✓ Collected':(r.quest?'Complete a quest to unlock':'Purchase from Merchant'))+'</div>';
+      h+='</div></div>';
+    }
+    h+='</div></div>';
+
+    // Quest groups
+    let qTypes=[{k:'M',l:'Main Story'},{k:'S',l:'Side Quests'},{k:'B',l:'Bounties'},{k:'G',l:'Gathering'}];
+    for(let qt of qTypes){
+      let qs=QS.filter(q=>q.tp===qt.k);
+      if(!qs.length)continue;
+      let dn=qs.filter(q=>doneQ.has(q.id)).length;
+      h+='<div class="col-section"><div class="col-hdr"><span class="col-hdr-name">'+qt.l+'</span><span class="col-hdr-count">'+dn+' / '+qs.length+'</span></div>';
+      h+='<div class="col-bar"><div class="col-bar-fill" style="width:'+Math.round(dn/qs.length*100)+'%"></div></div>';
+      h+='<div class="col-grid">';
+      for(let i=0;i<qs.length;i++){
+        let q=qs[i],has=doneQ.has(q.id),avail=openQ.has(q.id);
+        h+='<div class="col-item '+(has?'got':'miss')+'" onmouseenter="posColTip(event)">';
+        h+='<div class="col-num">'+(has?'✓':(i+1))+'</div>';
+        h+='<div class="col-tip">';
+        h+='<div class="col-tip-name">#'+(i+1)+' · '+q.n+'</div>';
+        h+='<div class="col-tip-desc">'+q.ds+'</div>';
+        h+='<div class="col-tip-divider"></div>';
+        h+='<div class="col-tip-status '+(has?'done':(avail?'avail':'miss'))+'">'+(has?'✓ Completed':(avail?'Available · Lv.'+q.lr:'Not yet discovered'))+'</div>';
+        h+='</div></div>';
+      }
+      h+='</div></div>';
+    }
+  }
+  document.getElementById('pbody').innerHTML=h;
+}
+
+// ═══ AUTO UPGRADE ═══
+function autoUpTick(){if(!P.autoUp)return;let best=SKILLS.filter(s=>!owned.has(s.id)&&(!s.req||owned.has(s.req))&&P.sp>=s.cost).sort((a,b)=>a.cost-b.cost);if(best.length)buySk(best[0].id);}
+
+// ═══ UPDATE ═══
+function update(dt){
+  if(!on)return;gt+=dt;
+  if(dlgOn)updateDlg(dt);
+  moveP(dt);
+  // Reveal fog around player
+  revealFog(P.x,P.y);
+  let inC=false;if(aQ){let s=aQ.st[sI];if(s&&s.t==='combat')inC=true;}if(grinding)inC=true;
+  if(inC)doCombat(dt);
+  P.hp=Math.min(P.maxHp,P.hp+dt*P.regen*1.5);
+  let lf=1-Math.pow(.0008,dt);
+  let hw=W/2/ZOOM,hh=H/2/ZOOM;
+  cam.x+=(P.x-hw-cam.x)*lf;cam.y+=(P.y-hh-cam.y)*lf;
+  cam.x=Math.max(0,Math.min(WW-W/ZOOM,cam.x));cam.y=Math.max(0,Math.min(WH-H/ZOOM,cam.y));
+  for(let p of parts){p.x+=p.vx;p.y+=p.vy;p.life-=dt*2;}parts=parts.filter(p=>p.life>0);
+  for(let f of flts){f.y+=f.vy;f.life-=dt*.6;}flts=flts.filter(f=>f.life>0);
+  ens=ens.filter(e=>!e.dead);
+  // Calculate exploration % every ~2 seconds
+  if(Math.floor(gt*0.5)!==Math.floor((gt-dt)*0.5))P._expl=calcExplored();
+  if(Math.floor(gt*2)%5===0&&Math.random()<dt)autoUpTick();
+  checkMerchant();
+  updateHUD();
+}
+
+// ═══ LOOP ═══
+let lastT=-1;
+function loop(ts){
+  if(lastT<0){lastT=ts;requestAnimationFrame(loop);return;}
+  let raw=(ts-lastT)/1000;lastT=ts;if(raw>.1)raw=.016;
+  let dt=raw*gsp;
+  X.fillStyle='#0b0b0f';X.fillRect(0,0,W,H);
+  update(dt);drawW();drawMM();if(mapOn)drawFMap();
+  requestAnimationFrame(loop);
+}
+genW();buildTerrain();cam.x=P.x-W/2/ZOOM;cam.y=P.y-H/2/ZOOM;updateHUD();renderP();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
