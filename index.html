@@ -410,6 +410,11 @@ canvas{display:block;position:absolute;top:0;left:0;}
     <button class="sb" onclick="setSp(4)" id="sp4">4×</button>
     <div style="width:1px;height:18px;background:var(--bd);margin:0 4px"></div>
     <button class="sb str-btn" onclick="openTree()">⬦ Skills</button>
+    <div style="width:1px;height:18px;background:var(--bd);margin:0 4px"></div>
+    <button class="sb qb" onclick="setQuality(0)">Q:Low</button>
+    <button class="sb qb" onclick="setQuality(1)">Q:Med</button>
+    <button class="sb qb on" onclick="setQuality(2)">Q:High</button>
+    <button class="sb qb" onclick="setQuality(3)">Q:Max</button>
   </div>
   <div class="bg">
     <span class="hint" id="cHint">WASD / Arrows to move</span>
@@ -425,7 +430,7 @@ canvas{display:block;position:absolute;top:0;left:0;}
 const C=document.getElementById('game'),X=C.getContext('2d');
 const MC=document.getElementById('mmc'),MX=MC.getContext('2d');
 let W,H;function rz(){W=C.width=innerWidth;H=C.height=innerHeight;}rz();addEventListener('resize',rz);
-const WW=6400,WH=5200,cam={x:0,y:0};
+const WW=16384,WH=12288,cam={x:0,y:0};
 let gsp=1,gt=0,on=false;
 function setSp(s){gsp=s;document.querySelectorAll('#bot .sb').forEach(b=>b.classList.remove('on'));document.getElementById('sp'+s).classList.add('on');}
 
@@ -756,40 +761,103 @@ function dst(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
 
 function go(){document.getElementById('start').classList.add('gone');setTimeout(()=>{document.getElementById('start').style.display='none'},600);on=true;pOn=true;document.getElementById('panel').classList.remove('h');document.getElementById('tog').style.right='388px';document.getElementById('stats').style.right='388px';renderP();setTimeout(()=>startQst('m1'),400);}
 
-// ═══ PRE-RENDER TERRAIN TO OFFSCREEN CANVAS ═══
-let terrainC,terrainReady=false;
-const mapImg=new Image();
-mapImg.src='assets/maps/testmap1.png';
+// ═══ TILE-BASED TERRAIN SYSTEM ═══
+let terrainReady=false;
+
+// Tile manifest (from tile-manifest.json — hardcoded to avoid async fetch)
+const TILE_SIZE=1024;
+const TILE_COLS={min:-8,max:7};
+const TILE_ROWS={min:-6,max:5};
+const MAP_PX_W=16384,MAP_PX_H=12288;
+
+// Quality settings
+const QUALITY_LEVELS=[
+  {id:'q10',label:'Low',folder:'tiles_q10'},
+  {id:'q70',label:'Medium',folder:'tiles_q70'},
+  {id:'q95',label:'High',folder:'tiles_q95'},
+  {id:'q100',label:'Perfect',folder:'tiles_q100'}
+];
+let currentQuality=2; // index into QUALITY_LEVELS, default q95 (High)
+
+// Tile cache: key = "col_row", value = Image (loaded) or 'loading'
+let tileCache={};
+
+function tileKey(col,row){return col+'_'+row;}
+
+function getTilePath(col,row){
+  return 'assets/maps/'+QUALITY_LEVELS[currentQuality].folder+'/tile_'+col+'_'+row+'.webp';
+}
+
+function loadTile(col,row){
+  let k=tileKey(col,row);
+  if(tileCache[k])return; // already loaded or loading
+  if(col<TILE_COLS.min||col>TILE_COLS.max||row<TILE_ROWS.min||row>TILE_ROWS.max)return;
+  tileCache[k]='loading';
+  let img=new Image();
+  img.onload=function(){tileCache[k]=img;terrainReady=true;};
+  img.onerror=function(){delete tileCache[k];}; // retry next frame
+  img.src=getTilePath(col,row);
+}
+
+function setQuality(idx){
+  if(idx===currentQuality)return;
+  currentQuality=idx;
+  tileCache={}; // clear cache, tiles reload at new quality
+  terrainReady=false;
+  // Update button states
+  document.querySelectorAll('.qb').forEach((b,i)=>b.classList.toggle('on',i===idx));
+}
+
+// Map world coords to tile coords
+// The tile origin is the center of the source image.
+// World (0,0) = top-left of tile grid.
+// So world pos maps to pixel pos in the source image directly (1:1).
+const TILE_OFFSET_X=MAP_PX_W/2; // 8192
+const TILE_OFFSET_Y=MAP_PX_H/2; // 6144
+
+function worldToTileCol(wx){return Math.floor((wx-0+TILE_OFFSET_X)/TILE_SIZE)+TILE_COLS.min;}
+function worldToTileRow(wy){return Math.floor((wy-0+TILE_OFFSET_Y)/TILE_SIZE)+TILE_ROWS.min;}
+
+// Draw visible tiles onto the main canvas context (already translated by camera)
+function drawTiles(ctx,vl,vt,vr,vb){
+  // Figure out which tiles are visible
+  let c0=Math.floor((vl+TILE_OFFSET_X)/TILE_SIZE)+TILE_COLS.min;
+  let c1=Math.floor((vr+TILE_OFFSET_X)/TILE_SIZE)+TILE_COLS.min;
+  let r0=Math.floor((vt+TILE_OFFSET_Y)/TILE_SIZE)+TILE_ROWS.min;
+  let r1=Math.floor((vb+TILE_OFFSET_Y)/TILE_SIZE)+TILE_ROWS.min;
+
+  // Clamp to grid bounds
+  c0=Math.max(TILE_COLS.min,c0); c1=Math.min(TILE_COLS.max,c1);
+  r0=Math.max(TILE_ROWS.min,r0); r1=Math.min(TILE_ROWS.max,r1);
+
+  for(let c=c0;c<=c1;c++){
+    for(let r=r0;r<=r1;r++){
+      let k=tileKey(c,r);
+      let tile=tileCache[k];
+
+      // World position of this tile's top-left corner
+      let wx=(c-TILE_COLS.min)*TILE_SIZE-TILE_OFFSET_X;
+      let wy=(r-TILE_ROWS.min)*TILE_SIZE-TILE_OFFSET_Y;
+
+      if(tile&&tile!=='loading'){
+        // Draw with 1px overlap on each side to prevent seams
+        ctx.drawImage(tile,wx-1,wy-1,TILE_SIZE+2,TILE_SIZE+2);
+      }
+
+      // Request load if not cached
+      if(!tile)loadTile(c,r);
+    }
+  }
+}
+
+// Minimap image (pre-generated small version)
+const minimapImg=new Image();
+minimapImg.src='assets/maps/minimap.png';
 
 function buildTerrain(){
-  terrainC=document.createElement('canvas');terrainC.width=WW;terrainC.height=WH;
-  let T=terrainC.getContext('2d');
-
-  // Start with flat biome colors as immediate fallback
-  for(let b of BIO){T.fillStyle=b.c;T.fillRect(b.x,b.y,b.w,b.h);}
+  // No more giant offscreen canvas — tiles load on demand
+  // Just draw biome fallback colors until tiles load
   terrainReady=true;
-
-  // When image loads, tile it into 4 quadrants
-  mapImg.onload=function(){
-    let hw=WW/2, hh=WH/2;
-    // Top-left quadrant
-    T.drawImage(mapImg,0,0,hw,hh);
-    // Top-right quadrant (same image for now)
-    T.drawImage(mapImg,0,0,mapImg.naturalWidth,mapImg.naturalHeight,hw,0,hw,hh);
-    // Bottom-left quadrant
-    T.drawImage(mapImg,0,0,mapImg.naturalWidth,mapImg.naturalHeight,0,hh,hw,hh);
-    // Bottom-right quadrant
-    T.drawImage(mapImg,0,0,mapImg.naturalWidth,mapImg.naturalHeight,hw,hh,hw,hh);
-  };
-
-  // If image already cached
-  if(mapImg.complete&&mapImg.naturalWidth>0){
-    let hw=WW/2, hh=WH/2;
-    T.drawImage(mapImg,0,0,mapImg.naturalWidth,mapImg.naturalHeight,0,0,hw,hh);
-    T.drawImage(mapImg,0,0,mapImg.naturalWidth,mapImg.naturalHeight,hw,0,hw,hh);
-    T.drawImage(mapImg,0,0,mapImg.naturalWidth,mapImg.naturalHeight,0,hh,hw,hh);
-    T.drawImage(mapImg,0,0,mapImg.naturalWidth,mapImg.naturalHeight,hw,hh,hw,hh);
-  }
 }
 
 // ═══ DRAW ═══
@@ -801,14 +869,11 @@ function drawW(){
   let vw=W/ZOOM,vh=H/ZOOM;
   let vl=cam.x-60,vr=cam.x+vw+60,vt=cam.y-60,vb=cam.y+vh+60;
 
-  // ── Pre-rendered terrain ──
-  if(terrainReady){
-    let sx=Math.max(0,Math.floor(cam.x-vw*.1)),sy=Math.max(0,Math.floor(cam.y-vh*.1));
-    let sw=Math.min(WW-sx,vw+vw*.2),sh=Math.min(WH-sy,vh+vh*.2);
-    if(sw>0&&sh>0) X.drawImage(terrainC,sx,sy,sw,sh,sx,sy,sw,sh);
-  } else {
-    for(let b of BIO){X.fillStyle=b.c;X.fillRect(b.x,b.y,b.w,b.h);}
-  }
+  // ── Biome fallback colors (drawn first, tiles paint over them) ──
+  for(let b of BIO){X.fillStyle=b.c;X.fillRect(b.x,b.y,b.w,b.h);}
+
+  // ── Tile-based terrain ──
+  drawTiles(X,vl,vt,vr,vb);
 
   // ── Animated water shimmer (drawn on top of baked water) ──
   for(let w of water){
@@ -969,8 +1034,8 @@ function drawMM(){
   MX.fillStyle='#09090c';MX.fillRect(0,0,mw,mh);
   let sx=mw/WW,sy=mh/WH;
   // Terrain
-  if(terrainReady){MX.drawImage(terrainC,0,0,WW,WH,0,0,mw,mh);}
-  else{for(let b of BIO){MX.fillStyle=b.c;MX.fillRect(b.x*sx,b.y*sy,b.w*sx,b.h*sy);}}
+  for(let b of BIO){MX.fillStyle=b.c;MX.fillRect(b.x*sx,b.y*sy,b.w*sx,b.h*sy);}
+  if(minimapImg.complete&&minimapImg.naturalWidth>0){MX.drawImage(minimapImg,0,0,mw,mh);}
   // Fog on minimap
   MX.drawImage(fogC,0,0,FW,FH,0,0,mw,mh);
   // Roads (over fog slightly visible as explored paths)
@@ -1284,8 +1349,8 @@ function drawFMap(){
   let ox=(mw-WW*sc)/2,oy=(mh-WH*sc)/2;
   fx.fillStyle='#06060a';fx.fillRect(0,0,mw,mh);
   fx.save();fx.translate(ox,oy);fx.scale(sc,sc);
-  if(terrainReady)fx.drawImage(terrainC,0,0,WW,WH);
-  else{for(let b of BIO){fx.fillStyle=b.c;fx.fillRect(b.x,b.y,b.w,b.h);}}
+  for(let b of BIO){fx.fillStyle=b.c;fx.fillRect(b.x,b.y,b.w,b.h);}
+  if(minimapImg.complete&&minimapImg.naturalWidth>0){fx.drawImage(minimapImg,0,0,WW,WH);}
   fx.drawImage(fogC,0,0,FW,FH,0,0,WW,WH);
   // Towns
   fx.font='600 24px "IBM Plex Sans"';fx.textAlign='center';

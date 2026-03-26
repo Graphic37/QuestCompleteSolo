@@ -2,5 +2,12 @@
 assets/maps/map.png
 assets/maps/map_q100.webp
 
+# Generated tile folders (run scripts/update-map-from-full-map-png.py to regenerate)
+assets/maps/tiles_q10/
+assets/maps/tiles_q70/
+assets/maps/tiles_q95/
+assets/maps/tiles_q100/
+assets/maps/minimap.png
+
 # Python virtual environment
 .venv/
