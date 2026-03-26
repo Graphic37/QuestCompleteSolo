@@ -1,0 +1,13 @@
+{
+    "tileSize": 1024,
+    "format": "webp",
+    "bounds": {
+        "minCol": -8,
+        "maxCol": 7,
+        "minRow": -6,
+        "maxRow": 5
+    },
+    "origin": "center",
+    "mapPixelWidth": 16384,
+    "mapPixelHeight": 12288
+}
