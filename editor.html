@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quest Complete — World Editor</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+:root{--bg:#0a0a0e;--sf:rgba(16,16,22,.97);--bd:rgba(255,255,255,.08);--bd2:rgba(255,255,255,.14);--tx:#d4d0c8;--tx2:#8a8678;--tx3:#555048;--gd:#d4a843;--gn:#5a9a4a;--rd:#c04040;--bl:#5080b0;--pp:#9070b0;--fn:'IBM Plex Sans',sans-serif;--mn:'IBM Plex Mono',monospace;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--tx);font-family:var(--fn);overflow:hidden;height:100vh;width:100vw;display:flex;flex-direction:column;user-select:none;}
+
+/* TOP TOOLBAR */
+#toolbar{height:44px;background:var(--sf);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 16px;gap:8px;flex-shrink:0;z-index:50;}
+.tool-group{display:flex;align-items:center;gap:4px;}
+.tool-sep{width:1px;height:24px;background:var(--bd);margin:0 6px;}
+.tool-btn{background:rgba(255,255,255,.03);border:1px solid var(--bd);color:var(--tx2);padding:5px 12px;font-family:var(--fn);font-size:12px;font-weight:600;cursor:pointer;border-radius:4px;transition:all .12s;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.tool-btn:hover{color:var(--tx);background:rgba(255,255,255,.06);}
+.tool-btn.on{color:var(--gd);border-color:rgba(212,168,67,.3);background:rgba(212,168,67,.06);}
+.tool-btn.danger{color:var(--rd);}
+.tool-btn.danger:hover{background:rgba(192,64,64,.08);border-color:rgba(192,64,64,.25);}
+.tool-btn.export{color:var(--gn);}
+.tool-btn.export:hover{background:rgba(90,154,74,.08);}
+.tool-label{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-right:2px;}
+
+/* MAIN LAYOUT */
+#main{flex:1;display:flex;overflow:hidden;}
+
+/* CANVAS VIEWPORT */
+#viewport{flex:1;position:relative;overflow:hidden;cursor:crosshair;background:#050508;}
+#viewport canvas{position:absolute;top:0;left:0;image-rendering:auto;}
+
+/* SIDE PANEL */
+#side{width:320px;background:var(--sf);border-left:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;z-index:30;transition:margin-right .2s;}
+#side.collapsed{margin-right:-320px;}
+.side-tabs{display:flex;border-bottom:1px solid var(--bd);flex-shrink:0;}
+.side-tab{flex:1;padding:10px 0;text-align:center;font-size:11px;font-weight:600;color:var(--tx3);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s;text-transform:uppercase;letter-spacing:.6px;}
+.side-tab:hover{color:var(--tx2);}
+.side-tab.on{color:var(--gd);border-bottom-color:var(--gd);}
+.side-body{flex:1;overflow-y:auto;padding:10px;}
+.side-body::-webkit-scrollbar{width:4px;}
+.side-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.06);border-radius:2px;}
+
+/* ENTITY LIST ITEMS */
+.ent{padding:8px 10px;margin-bottom:4px;border-radius:5px;background:rgba(255,255,255,.015);border:1px solid var(--bd);cursor:pointer;transition:all .12s;font-size:12px;}
+.ent:hover{background:rgba(255,255,255,.04);border-color:var(--bd2);}
+.ent.sel{border-color:var(--gd);background:rgba(212,168,67,.04);}
+.ent-name{font-weight:600;margin-bottom:2px;}
+.ent-sub{color:var(--tx2);font-size:11px;}
+.ent-coord{font-family:var(--mn);font-size:10px;color:var(--tx3);}
+
+/* SECTION HEADERS */
+.sec-hd{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;padding:10px 4px 6px;display:flex;align-items:center;gap:6px;}
+.sec-hd::after{content:'';flex:1;height:1px;background:var(--bd);}
+
+/* BOTTOM BAR */
+#bottombar{height:28px;background:var(--sf);border-top:1px solid var(--bd);display:flex;align-items:center;padding:0 14px;gap:14px;font-size:11px;color:var(--tx3);flex-shrink:0;z-index:50;}
+#bottombar .coord{font-family:var(--mn);color:var(--tx2);}
+#bottombar .info{margin-left:auto;display:flex;gap:14px;align-items:center;}
+.qb{background:none;border:1px solid var(--bd);color:var(--tx3);padding:2px 8px;font-size:10px;font-weight:600;cursor:pointer;border-radius:3px;font-family:var(--fn);transition:all .1s;}
+.qb:hover{color:var(--tx2);}
+.qb.on{color:var(--gd);border-color:rgba(212,168,67,.3);}
+
+/* OVERLAYS */
+#coords-overlay{position:absolute;bottom:8px;right:8px;pointer-events:none;z-index:5;font-family:var(--mn);font-size:12px;color:var(--tx2);background:var(--sf);border:1px solid var(--bd);border-radius:4px;padding:3px 10px;}
+#hover-info{position:absolute;pointer-events:none;z-index:40;background:rgba(10,10,16,.96);border:1px solid var(--bd2);border-radius:6px;padding:8px 12px;font-size:12px;max-width:240px;display:none;box-shadow:0 6px 20px rgba(0,0,0,.5);}
+#hover-info .hi-name{font-weight:700;margin-bottom:2px;}
+#hover-info .hi-sub{color:var(--tx2);font-size:11px;line-height:1.4;}
+#hover-info .hi-coord{font-family:var(--mn);font-size:10px;color:var(--tx3);margin-top:3px;}
+
+/* HELP OVERLAY */
+#help{position:absolute;bottom:8px;left:8px;background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:8px 12px;z-index:5;pointer-events:none;font-size:11px;color:var(--tx3);line-height:1.5;}
+#help b{color:var(--tx2);}
+
+/* MODAL */
+#modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);transition:opacity .15s;}
+#modal.h{opacity:0;pointer-events:none;}
+.modal-box{background:#12121a;border:1px solid var(--bd);border-radius:10px;width:700px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 16px 50px rgba(0,0,0,.5);}
+.modal-top{padding:14px 20px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;}
+.modal-title{font-size:16px;font-weight:700;color:var(--gd);}
+.modal-body{padding:14px 20px;flex:1;overflow-y:auto;}
+.modal-body textarea{width:100%;height:300px;background:rgba(0,0,0,.3);border:1px solid var(--bd);border-radius:5px;color:var(--tx);font-family:var(--mn);font-size:11px;padding:10px;resize:none;}
+.modal-body p{font-size:12px;color:var(--tx2);margin-bottom:8px;line-height:1.4;}
+.modal-foot{padding:10px 20px;border-top:1px solid var(--bd);display:flex;gap:8px;justify-content:flex-end;}
+
+/* MINIMAP */
+#minimap{position:absolute;top:8px;right:8px;z-index:15;border:1px solid var(--bd2);border-radius:6px;overflow:hidden;background:#09090c;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);}
+#minimap canvas{display:block;}
+
+/* LEGEND */
+.legend{display:flex;flex-wrap:wrap;gap:6px;padding:6px 4px;}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--tx2);}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.legend-line{width:12px;height:2px;border-radius:1px;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div id="toolbar">
+  <span style="font-size:14px;font-weight:700;color:var(--gd);letter-spacing:1px;margin-right:4px;">WORLD EDITOR</span>
+  <div class="tool-sep"></div>
+
+  <span class="tool-label">Mode</span>
+  <div class="tool-group">
+    <button class="tool-btn on" data-mode="select" onclick="setMode('select')">Select</button>
+    <button class="tool-btn" data-mode="town" onclick="setMode('town')">+ Town</button>
+    <button class="tool-btn" data-mode="road" onclick="setMode('road')">+ Road</button>
+    <button class="tool-btn" data-mode="quest" onclick="setMode('quest')">+ Quest Pt</button>
+  </div>
+
+  <div class="tool-sep"></div>
+  <span class="tool-label">Show</span>
+  <div class="tool-group">
+    <button class="tool-btn on" data-layer="tiles" onclick="toggleLayer('tiles')">Map</button>
+    <button class="tool-btn on" data-layer="biomes" onclick="toggleLayer('biomes')">Biomes</button>
+    <button class="tool-btn on" data-layer="roads" onclick="toggleLayer('roads')">Roads</button>
+    <button class="tool-btn on" data-layer="towns" onclick="toggleLayer('towns')">Towns</button>
+    <button class="tool-btn on" data-layer="quests" onclick="toggleLayer('quests')">Quests</button>
+    <button class="tool-btn" data-layer="grid" onclick="toggleLayer('grid')">Grid</button>
+    <button class="tool-btn on" data-layer="enemies" onclick="toggleLayer('enemies')">Enemies</button>
+  </div>
+
+  <div class="tool-sep"></div>
+  <div class="tool-group">
+    <button class="tool-btn" onclick="fitView()">Fit</button>
+    <button class="tool-btn export" onclick="doExport()">Export</button>
+    <button class="tool-btn" onclick="toggleSide()">Panel</button>
+  </div>
+</div>
+
+<!-- MAIN AREA -->
+<div id="main">
+  <div id="viewport">
+    <canvas id="tile-canvas"></canvas>
+    <canvas id="overlay-canvas"></canvas>
+    <div id="minimap"><canvas id="mm-canvas" width="200" height="150"></canvas></div>
+    <div id="hover-info"><div class="hi-name"></div><div class="hi-sub"></div><div class="hi-coord"></div></div>
+    <div id="help">
+      <b>Scroll</b> zoom · <b>Middle/Space+drag</b> pan · <b>Click</b> select/place<br>
+      <b>Delete</b> remove selected · <b>F</b> fit view · <b>Tab</b> toggle panel · <b>G</b> grid
+    </div>
+  </div>
+
+  <!-- SIDE PANEL -->
+  <div id="side">
+    <div class="side-tabs">
+      <div class="side-tab on" data-stab="world" onclick="setSideTab('world')">World</div>
+      <div class="side-tab" data-stab="quests" onclick="setSideTab('quests')">Quests</div>
+      <div class="side-tab" data-stab="entities" onclick="setSideTab('entities')">Entities</div>
+    </div>
+    <div class="side-body" id="side-content"></div>
+  </div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div id="bottombar">
+  <span>World <span class="coord" id="bb-coord">0, 0</span></span>
+  <span>Biome: <span id="bb-biome" style="color:var(--tx2)">—</span></span>
+  <span>Zoom: <span class="coord" id="bb-zoom">100%</span></span>
+  <div class="info">
+    <span class="tool-label" style="margin:0">Quality</span>
+    <button class="qb" onclick="setQuality(0)">Low</button>
+    <button class="qb" onclick="setQuality(1)">Med</button>
+    <button class="qb on" onclick="setQuality(2)">High</button>
+    <button class="qb" onclick="setQuality(3)">Max</button>
+    <span style="color:var(--tx3)">|</span>
+    <span id="bb-tiles" style="color:var(--tx3)">0 tiles</span>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="h">
+  <div class="modal-box">
+    <div class="modal-top">
+      <div class="modal-title">Export World Data</div>
+      <button class="tool-btn" onclick="closeModal()">Close</button>
+    </div>
+    <div class="modal-body">
+      <p>Game-compatible JavaScript data. Copy and paste into index.html to update the game world.</p>
+      <textarea id="exportArea" readonly></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="tool-btn export" onclick="copyExport()">Copy to Clipboard</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// WORLD CONSTANTS (matching index.html exactly)
+// ═══════════════════════════════════════════════════════════
+const WW=16384, WH=12288;
+
+// Tile system
+const TILE_SIZE=1024;
+const TILE_COLS={min:-8,max:7};
+const TILE_ROWS={min:-6,max:5};
+const TILE_OFFSET_X=WW/2; // 8192
+const TILE_OFFSET_Y=WH/2; // 6144
+const QUALITY_LEVELS=[
+  {id:'q10',label:'Low',folder:'tiles_q10'},
+  {id:'q70',label:'Medium',folder:'tiles_q70'},
+  {id:'q95',label:'High',folder:'tiles_q95'},
+  {id:'q100',label:'Perfect',folder:'tiles_q100'}
+];
+let currentQuality=2;
+let tileCache={};
+let tilesLoaded=0;
+
+// ═══════════════════════════════════════════════════════════
+// GAME DATA (mirrored from index.html)
+// ═══════════════════════════════════════════════════════════
+const BIO=[
+  {n:'Greenhollow Plains',c:'#3a6b2a',x:0,y:0,w:2200,h:2600},
+  {n:'Darkwood Forest',c:'#1a3a1a',x:2200,y:0,w:2000,h:2000},
+  {n:'Ashfall Wastes',c:'#5a4030',x:4200,y:0,w:2200,h:2600},
+  {n:'Crystal Lake',c:'#2a4a5a',x:0,y:2600,w:2600,h:2600},
+  {n:'Ironpeak Mountains',c:'#4a4a50',x:2600,y:2000,w:1800,h:1800},
+  {n:'Sunscorch Desert',c:'#8a7a50',x:4200,y:2600,w:2200,h:2600},
+  {n:'The Shadowmere',c:'#1a1a2a',x:2600,y:3800,w:1600,h:1400}
+];
+
+const TWN=[
+  {n:'Willowbrook',x:900,y:2600,d:'A peaceful farming village.',v:true,r:65},
+  {n:'Merchant',x:1050,y:2500,d:'A traveling merchant with rare goods.',v:true,r:30,merchant:true},
+  {n:'Thornwatch',x:700,y:1200,d:'Frontier outpost.',v:false,r:50},
+  {n:'Eldergrove',x:3000,y:800,d:'Druid settlement in ancient trees.',v:false,r:55},
+  {n:'Cinderhold',x:5000,y:1200,d:'Dwarven forge-city.',v:false,r:60},
+  {n:'Mistport',x:900,y:3900,d:'Port town on Crystal Lake.',v:false,r:65},
+  {n:'Ironhaven',x:3400,y:2800,d:'Fortified mountain city.',v:false,r:70},
+  {n:'Sunspire',x:5400,y:3600,d:'Golden city of the Sun Elves.',v:false,r:60},
+  {n:'Shadowmere Sanctum',x:3400,y:4400,d:'Hidden monastery.',v:false,r:50},
+  {n:'Briarwood',x:1800,y:1600,d:'Logging camp on the forest edge.',v:false,r:45},
+  {n:'Dusthaven',x:4600,y:2200,d:'Desert trading post.',v:false,r:48},
+  {n:'Frostmere',x:1200,y:600,d:'Northern fishing hamlet.',v:false,r:42},
+  {n:'Stonekeep',x:3000,y:2200,d:'Mountain pass fortress.',v:false,r:52},
+  {n:'Ashfall Camp',x:4800,y:600,d:'Scavenger settlement in the wastes.',v:false,r:44},
+  {n:'Lakeside',x:1600,y:3200,d:'Quiet village on the crystal shore.',v:false,r:46},
+  {n:'Duskhollow',x:2800,y:4800,d:'Remote outpost near the Shadowmere.',v:false,r:40}
+];
+
+const RD=[
+  [[0,2600],[900,2600],[1600,2300],[2400,1800],[3000,800]],
+  [[900,2600],[900,1900],[700,1200]],
+  [[3000,800],[3800,1200],[4400,1200],[5000,1200]],
+  [[900,2600],[1300,3100],[900,3900]],
+  [[3000,800],[3200,1700],[3400,2800]],
+  [[3400,2800],[4200,2900],[5000,3300],[5400,3600]],
+  [[3400,2800],[3400,3700],[3400,4400]],
+  [[900,3900],[2000,4100],[3000,4200],[3400,4400]],
+  [[5000,1200],[5200,2100],[5400,3600]],
+  [[700,1200],[1200,600]],[[900,2600],[1800,1600]],
+  [[1800,1600],[2400,1800]],[[3000,2200],[3400,2800]],
+  [[3000,800],[3000,2200]],[[4600,2200],[5000,1200]],
+  [[4600,2200],[5400,3600]],[[900,3900],[1600,3200]],
+  [[4800,600],[5000,1200]],[[2800,4800],[3400,4400]]
+];
+
+const ET=[
+  {n:'Slime',hp:12,a:2,xp:10,g:6,c:'#50c050',s:8},
+  {n:'Wolf',hp:22,a:4,xp:16,g:9,c:'#909090',s:10},
+  {n:'Bandit',hp:35,a:7,xp:24,g:16,c:'#a06040',s:12},
+  {n:'Forest Spirit',hp:30,a:6,xp:22,g:13,c:'#40c0a0',s:10},
+  {n:'Bone Archer',hp:45,a:9,xp:30,g:19,c:'#c0c080',s:11},
+  {n:'Cave Troll',hp:70,a:12,xp:42,g:28,c:'#606050',s:16},
+  {n:'Dark Knight',hp:90,a:15,xp:55,g:38,c:'#403050',s:14},
+  {n:'Sand Wyrm',hp:110,a:17,xp:70,g:48,c:'#c0a050',s:18},
+  {n:'Shadow Wraith',hp:80,a:18,xp:75,g:52,c:'#4040a0',s:12},
+  {n:'Fire Elemental',hp:140,a:22,xp:95,g:62,c:'#e04020',s:16},
+  {n:'Wraith Lord',hp:220,a:30,xp:160,g:100,c:'#2020a0',s:18},
+  {n:'Dragon Whelp',hp:300,a:35,xp:200,g:130,c:'#900040',s:22}
+];
+
+// Quest data
+function Q(id,n,tp,ch,ds,lr,st,rw,lore,ul,dlg){return{id,n,tp,ch,ds,lr,st,rw:{e:rw[0],g:rw[1]},lore,ul:ul||[],dlg:dlg||[]};}
+function S(t,x,y,tx,en,ct){return{t,x,y,tx,en,ct};}
+const QS=[
+  Q('m1','The Road Ahead','M',1,'Speak with Elder Thomas.',1,[S('dlg'),S('travel',700,2300,'Visit the old shrine'),S('dlg'),S('travel',900,2600,'Return to Willowbrook'),S('dlg')],[40,25],'',[]),
+  Q('m2','Into the Darkwood','M',1,'Investigate the forest.',2,[S('dlg'),S('travel',2400,1500,'Enter the Darkwood'),S('combat',0,0,'Calm 2 spirits','Forest Spirit',2),S('discover',3000,800,'Find Eldergrove'),S('dlg')],[100,45],'',[]),
+  Q('m3',"Corruption's Root",'M',2,'Find corruption source.',3,[S('dlg'),S('travel',3200,500,'Journey to corruption'),S('combat',0,0,'Defeat spirits','Forest Spirit',3),S('travel',3000,800,'Report'),S('dlg')],[140,60],'',[]),
+  Q('m4','March to Thornwatch','M',2,'Warn the outpost.',4,[S('dlg'),S('discover',700,1200,'Discover Thornwatch'),S('combat',0,0,'Clear road','Bandit',4),S('dlg')],[180,80],'',[]),
+  Q('m5','The Ironpeak Ascent','M',3,'Seek the mountain Wardstone.',5,[S('dlg'),S('travel',3200,2400,'Climb Ironpeaks'),S('combat',0,0,'Clear trolls','Cave Troll',2),S('discover',3400,2800,'Find Ironhaven'),S('dlg')],[240,100],'',[]),
+  Q('m6','Forged in Fire','M',3,'Journey to the forge.',6,[S('travel',5000,1200,'Travel to Cinderhold'),S('discover',5000,1200,'Discover Cinderhold'),S('dlg'),S('combat',0,0,'Defeat guardian','Fire Elemental',1),S('dlg')],[320,140],'',[]),
+  Q('m7','Desert Crossing','M',4,'Cross the desert.',7,[S('dlg'),S('travel',4600,2900,'Enter desert'),S('combat',0,0,'Survive wyrms','Sand Wyrm',2),S('discover',5400,3600,'Discover Sunspire'),S('dlg')],[400,180],'',[]),
+  Q('m8','The Crystal Shore','M',4,'Gather allies.',8,[S('discover',900,3900,'Discover Mistport'),S('dlg'),S('combat',0,0,'Clear pirates','Bandit',5),S('dlg')],[450,200],'',[]),
+  Q('m9','Into the Shadowmere','M',5,'Enter the darkness.',9,[S('dlg'),S('travel',3400,4400,'Enter Shadowmere'),S('combat',0,0,'Fight wraiths','Shadow Wraith',3),S('discover',3400,4400,'Find Sanctum'),S('dlg')],[550,250],'',[]),
+  Q('m10','Reassembly','M',5,'Collect remaining shards.',10,[S('dlg'),S('travel',5000,1200,'Return to Cinderhold'),S('combat',0,0,'Defeat vanguard','Dark Knight',3),S('travel',5400,3600,'Return to Sunspire'),S('combat',0,0,'Defeat vanguard','Dark Knight',3),S('travel',3400,4400,'Return to Sanctum'),S('dlg')],[700,350],'',[]),
+  Q('m11',"The Betrayer's Champion",'M',6,'Defend the Sanctum!',11,[S('dlg'),S('combat',0,0,'Repel assault','Shadow Wraith',4),S('combat',0,0,'Slay champion','Dragon Whelp',1),S('dlg')],[900,500],'',[]),
+  Q('m12','The Eternal Watch','M',6,'Tour the kingdom.',12,[S('dlg'),S('travel',900,2600,'Visit Willowbrook'),S('travel',3000,800,'Visit Eldergrove'),S('travel',3400,2800,'Visit Ironhaven'),S('travel',5400,3600,'Visit Sunspire'),S('travel',3400,4400,'Return to Sanctum'),S('dlg')],[1200,800],'',[]),
+  // Side quests
+  Q('s1','Herb Gathering','G',0,'Collect herbs.',1,[S('dlg'),S('travel',500,2100,'Search meadow'),S('travel',1300,2900,'Search glade'),S('travel',900,2600,'Deliver'),S('dlg')],[35,18],'',[]),
+  Q('s2','The Well Problem','S',0,'Contaminated well.',1,[S('dlg'),S('travel',1000,2400,'Investigate'),S('combat',0,0,'Clear slimes','Slime',4),S('travel',900,2600,'Report'),S('dlg')],[40,22],'',[]),
+  Q('s3','The Old Watchtower','S',0,'Explore ruins.',2,[S('dlg'),S('travel',2800,400,'Reach tower'),S('combat',0,0,'Clear','Bone Archer',3),S('dlg')],[60,30],'',[]),
+  Q('s4','Missing Merchant','S',0,'Find lost merchant.',2,[S('dlg'),S('travel',1900,1300,'Search road'),S('combat',0,0,'Fight wolves','Wolf',3),S('travel',3000,800,'Escort'),S('dlg')],[70,35],'',[]),
+  Q('s5','Bandit Bounty','B',0,'Clear bandit camp.',3,[S('dlg'),S('travel',1900,1800,'Locate camp'),S('combat',0,0,'Clear camp','Bandit',5),S('travel',3000,800,'Collect'),S('dlg')],[100,55],'',[]),
+  Q('s7','Thornwatch Patrol','S',0,'Join patrol.',4,[S('dlg'),S('travel',400,800,'Patrol west'),S('combat',0,0,'Fight raiders','Bandit',3),S('travel',900,1000,'Patrol east'),S('combat',0,0,'Fight wolves','Wolf',3),S('travel',700,1200,'Return'),S('dlg')],[120,58],'',[]),
+  Q('s9','Iron Legion Trials','S',0,'Prove yourself.',5,[S('dlg'),S('combat',0,0,'Trial Arms','Cave Troll',1),S('combat',0,0,'Trial Will','Dark Knight',1),S('dlg')],[170,85],'',[]),
+  Q('s10','Mountain Rescue','S',0,'Rescue miners.',5,[S('dlg'),S('travel',3000,2300,'Reach mine'),S('combat',0,0,'Clear','Cave Troll',2),S('travel',3400,2800,'Lead home'),S('dlg')],[150,75],'',[]),
+  Q('s11','Lake Monster','B',0,'Hunt the beast.',5,[S('dlg'),S('travel',1300,3300,'Investigate'),S('combat',0,0,'Slay beast','Cave Troll',2),S('travel',900,2600,'Bounty'),S('dlg')],[140,68],'',[]),
+  Q('s14','Desert Nomads','S',0,'Help nomads.',7,[S('dlg'),S('travel',5000,3300,'Find camp'),S('combat',0,0,'Defend','Sand Wyrm',2),S('dlg')],[280,130],'',[]),
+  Q('s16','Pirate Treasure','G',0,'Recover goods.',8,[S('dlg'),S('travel',700,4300,'Find cave'),S('combat',0,0,'Clear pirates','Bandit',5),S('travel',900,3900,'Return'),S('dlg')],[320,150],'',[]),
+  Q('s18','Shadow Training','S',0,'Learn shadow combat.',9,[S('dlg'),S('combat',0,0,'Spar','Shadow Wraith',2),S('combat',0,0,'Advanced','Dark Knight',2),S('dlg')],[400,200],'',[]),
+  Q('s19','The Dark Spire','B',0,'Destroy nexus.',9,[S('dlg'),S('travel',3000,4600,'Find spire'),S('combat',0,0,'Destroy guards','Shadow Wraith',3),S('combat',0,0,'Destroy nexus','Wraith Lord',1),S('dlg')],[500,250],'',[]),
+  Q('bw1','Timber Trouble','S',0,'Help loggers.',2,[S('dlg'),S('travel',1800,1600,'To Briarwood'),S('combat',0,0,'Clear wolves','Wolf',4),S('dlg')],[55,28],'',[]),
+  Q('fm1','Ice Fishing','G',0,'Frozen lake.',2,[S('dlg'),S('travel',1200,600,'To Frostmere'),S('travel',1400,500,'Fish'),S('travel',1200,600,'Deliver'),S('dlg')],[50,25],'',[]),
+  Q('sk1','Mountain Pass','S',0,'Blocked pass.',5,[S('dlg'),S('travel',3000,2200,'To Stonekeep'),S('combat',0,0,'Clear','Cave Troll',2),S('dlg')],[150,75],'',[]),
+  Q('dh1','Water Crisis','S',0,'Well dried up.',6,[S('dlg'),S('travel',4600,2200,'To Dusthaven'),S('travel',4400,2000,'Find water'),S('travel',4600,2200,'Report'),S('dlg')],[160,80],'',[]),
+  Q('ac1','Scavenger Hunt','G',0,'Gather supplies.',4,[S('dlg'),S('travel',4800,600,'To Ashfall'),S('travel',4500,400,'Scavenge'),S('travel',4800,600,'Deliver'),S('dlg')],[90,45],'',[]),
+  Q('ls1','Crystal Waters','G',0,'Gather crystals.',3,[S('dlg'),S('travel',1600,3200,'To Lakeside'),S('travel',1300,3400,'Gather'),S('travel',1600,3200,'Deliver'),S('dlg')],[60,30],'',[]),
+  Q('dk1','Border Watch','S',0,'Guard border.',8,[S('dlg'),S('travel',2800,4800,'To Duskhollow'),S('combat',0,0,'Patrol','Shadow Wraith',2),S('dlg')],[280,140],'',[]),
+  Q('cr3','The Grand Tour','S',0,'Visit every settlement.',8,[S('dlg'),S('travel',700,1200,'Thornwatch'),S('travel',1200,600,'Frostmere'),S('travel',1800,1600,'Briarwood'),S('travel',3000,800,'Eldergrove'),S('travel',3000,2200,'Stonekeep'),S('travel',4800,600,'Ashfall'),S('travel',5000,1200,'Cinderhold'),S('travel',4600,2200,'Dusthaven'),S('travel',5400,3600,'Sunspire'),S('travel',3400,2800,'Ironhaven'),S('travel',1600,3200,'Lakeside'),S('travel',900,3900,'Mistport'),S('travel',2800,4800,'Duskhollow'),S('travel',3400,4400,'Sanctum'),S('travel',900,2600,'Return'),S('dlg')],[600,300],'',[]),
+];
+
+const QUEST_COLORS={M:'#e0e0e0',S:'#5080b0',B:'#c04040',G:'#5a9a4a'};
+const QUEST_LABELS={M:'Main',S:'Side',B:'Bounty',G:'Gather'};
+
+// ═══════════════════════════════════════════════════════════
+// EDITOR STATE
+// ═══════════════════════════════════════════════════════════
+let mode='select';
+let layers={tiles:true,biomes:true,roads:true,towns:true,quests:true,grid:false,enemies:true};
+let panX=0, panY=0, zoom=0.08; // start zoomed to fit
+let panning=false, spaceDown=false, lastPan={x:0,y:0};
+let selected=null; // {type:'town'|'quest'|'road'|'enemy', idx:number}
+let hovered=null;
+let sideTab='world';
+let dragging=null; // for moving entities
+let roadBuilding=null; // array of points being built
+
+// ═══════════════════════════════════════════════════════════
+// CANVAS SETUP
+// ═══════════════════════════════════════════════════════════
+const vp=document.getElementById('viewport');
+const tileC=document.getElementById('tile-canvas');
+const tileX=tileC.getContext('2d');
+const ovC=document.getElementById('overlay-canvas');
+const ovX=ovC.getContext('2d');
+const mmC=document.getElementById('mm-canvas');
+const mmX=mmC.getContext('2d');
+
+function resize(){
+  const w=vp.clientWidth, h=vp.clientHeight;
+  tileC.width=w; tileC.height=h;
+  ovC.width=w; ovC.height=h;
+  render();
+}
+window.addEventListener('resize',resize);
+
+// ═══════════════════════════════════════════════════════════
+// TILE LOADING
+// ═══════════════════════════════════════════════════════════
+function tileKey(c,r){return c+'_'+r;}
+function tilePath(c,r){return 'assets/maps/'+QUALITY_LEVELS[currentQuality].folder+'/tile_'+c+'_'+r+'.webp';}
+
+function loadTile(col,row){
+  let k=tileKey(col,row);
+  if(tileCache[k])return;
+  if(col<TILE_COLS.min||col>TILE_COLS.max||row<TILE_ROWS.min||row>TILE_ROWS.max)return;
+  tileCache[k]='loading';
+  let img=new Image();
+  img.onload=function(){tileCache[k]=img;tilesLoaded++;render();};
+  img.onerror=function(){delete tileCache[k];};
+  img.src=tilePath(col,row);
+}
+
+function setQuality(idx){
+  if(idx===currentQuality)return;
+  currentQuality=idx;
+  tileCache={};tilesLoaded=0;
+  document.querySelectorAll('.qb').forEach((b,i)=>b.classList.toggle('on',i===idx));
+  render();
+}
+
+// ═══════════════════════════════════════════════════════════
+// COORDINATE TRANSFORMS
+// ═══════════════════════════════════════════════════════════
+function worldToScreen(wx,wy){
+  const cw=ovC.width, ch=ovC.height;
+  return{
+    x: cw/2 + (wx - WW/2)*zoom + panX,
+    y: ch/2 + (wy - WH/2)*zoom + panY
+  };
+}
+function screenToWorld(sx,sy){
+  const cw=ovC.width, ch=ovC.height;
+  return{
+    x: (sx - cw/2 - panX)/zoom + WW/2,
+    y: (sy - ch/2 - panY)/zoom + WH/2
+  };
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════
+let renderQueued=false;
+function render(){
+  if(renderQueued)return;
+  renderQueued=true;
+  requestAnimationFrame(_render);
+}
+
+function _render(){
+  renderQueued=false;
+  const cw=ovC.width, ch=ovC.height;
+  if(!cw||!ch)return;
+
+  // Clear
+  tileX.fillStyle='#050508';
+  tileX.fillRect(0,0,cw,ch);
+  ovX.clearRect(0,0,cw,ch);
+
+  // Viewport in world coords
+  const tl=screenToWorld(0,0);
+  const br=screenToWorld(cw,ch);
+
+  // ── BIOME LAYER (under tiles) ──
+  if(layers.biomes){
+    ovX.globalAlpha=layers.tiles?0.3:0.7;
+    for(let b of BIO){
+      const p1=worldToScreen(b.x,b.y);
+      const p2=worldToScreen(b.x+b.w,b.y+b.h);
+      ovX.fillStyle=b.c;
+      ovX.fillRect(p1.x,p1.y,p2.x-p1.x,p2.y-p1.y);
+      // Label
+      if(zoom>0.03){
+        const cx=(p1.x+p2.x)/2, cy=(p1.y+p2.y)/2;
+        ovX.fillStyle='rgba(255,255,255,.25)';
+        ovX.font='600 '+Math.max(10,Math.min(16,140*zoom))+'px "IBM Plex Sans"';
+        ovX.textAlign='center';ovX.textBaseline='middle';
+        ovX.fillText(b.n,cx,cy);
+      }
+    }
+    ovX.globalAlpha=1;
+  }
+
+  // ── TILE LAYER ──
+  if(layers.tiles){
+    // Which tiles are visible
+    let c0=Math.floor((tl.x+TILE_OFFSET_X)/TILE_SIZE)+TILE_COLS.min;
+    let c1=Math.floor((br.x+TILE_OFFSET_X)/TILE_SIZE)+TILE_COLS.min;
+    let r0=Math.floor((tl.y+TILE_OFFSET_Y)/TILE_SIZE)+TILE_ROWS.min;
+    let r1=Math.floor((br.y+TILE_OFFSET_Y)/TILE_SIZE)+TILE_ROWS.min;
+    c0=Math.max(TILE_COLS.min,c0); c1=Math.min(TILE_COLS.max,c1);
+    r0=Math.max(TILE_ROWS.min,r0); r1=Math.min(TILE_ROWS.max,r1);
+
+    let visible=0;
+    for(let c=c0;c<=c1;c++){
+      for(let r=r0;r<=r1;r++){
+        let k=tileKey(c,r);
+        let tile=tileCache[k];
+        // Tile world position
+        let wx=(c-TILE_COLS.min)*TILE_SIZE - TILE_OFFSET_X;
+        let wy=(r-TILE_ROWS.min)*TILE_SIZE - TILE_OFFSET_Y;
+        let sp=worldToScreen(wx,wy);
+        let sz=TILE_SIZE*zoom;
+
+        if(tile&&tile!=='loading'){
+          tileX.drawImage(tile, sp.x-0.5, sp.y-0.5, sz+1, sz+1);
+          visible++;
+        }
+        if(!tile)loadTile(c,r);
+      }
+    }
+    document.getElementById('bb-tiles').textContent=visible+'/'+tilesLoaded+' tiles';
+  }
+
+  // ── GRID LAYER ──
+  if(layers.grid){
+    ovX.strokeStyle='rgba(255,255,255,.06)';
+    ovX.lineWidth=1;
+    // 1024px grid (tile boundaries)
+    for(let c=TILE_COLS.min;c<=TILE_COLS.max+1;c++){
+      let wx=(c-TILE_COLS.min)*TILE_SIZE - TILE_OFFSET_X;
+      let s=worldToScreen(wx,0);
+      ovX.beginPath();ovX.moveTo(s.x,0);ovX.lineTo(s.x,ch);ovX.stroke();
+    }
+    for(let r=TILE_ROWS.min;r<=TILE_ROWS.max+1;r++){
+      let wy=(r-TILE_ROWS.min)*TILE_SIZE - TILE_OFFSET_Y;
+      let s=worldToScreen(0,wy);
+      ovX.beginPath();ovX.moveTo(0,s.y);ovX.lineTo(cw,s.y);ovX.stroke();
+    }
+  }
+
+  // ── WORLD BORDER ──
+  const bTL=worldToScreen(0,0), bBR=worldToScreen(WW,WH);
+  ovX.strokeStyle='rgba(212,168,67,.3)';ovX.lineWidth=2;
+  ovX.setLineDash([8,4]);
+  ovX.strokeRect(bTL.x,bTL.y,bBR.x-bTL.x,bBR.y-bTL.y);
+  ovX.setLineDash([]);
+
+  // ── CONTENT BOUNDARY ──
+  const cbTL=worldToScreen(0,0), cbBR=worldToScreen(6400,5200);
+  ovX.strokeStyle='rgba(90,154,74,.2)';ovX.lineWidth=1;
+  ovX.setLineDash([4,4]);
+  ovX.strokeRect(cbTL.x,cbTL.y,cbBR.x-cbTL.x,cbBR.y-cbTL.y);
+  ovX.setLineDash([]);
+  if(zoom>0.02){
+    ovX.fillStyle='rgba(90,154,74,.25)';
+    ovX.font='11px "IBM Plex Sans"';ovX.textAlign='left';ovX.textBaseline='top';
+    ovX.fillText('Content Area (6400x5200)',cbTL.x+4,cbTL.y+4);
+  }
+
+  // ── ROAD LAYER ──
+  if(layers.roads){
+    for(let ri=0;ri<RD.length;ri++){
+      const rd=RD[ri];
+      const isSel=selected&&selected.type==='road'&&selected.idx===ri;
+      ovX.strokeStyle=isSel?'rgba(200,180,140,.8)':'rgba(200,180,140,.35)';
+      ovX.lineWidth=isSel?3:2;
+      ovX.lineCap='round';ovX.lineJoin='round';
+      ovX.beginPath();
+      for(let i=0;i<rd.length;i++){
+        const p=worldToScreen(rd[i][0],rd[i][1]);
+        if(i===0)ovX.moveTo(p.x,p.y);else ovX.lineTo(p.x,p.y);
+      }
+      ovX.stroke();
+      // Waypoints
+      if(zoom>0.04){
+        for(let i=0;i<rd.length;i++){
+          const p=worldToScreen(rd[i][0],rd[i][1]);
+          ovX.fillStyle=isSel?'rgba(200,180,140,.7)':'rgba(200,180,140,.3)';
+          ovX.beginPath();ovX.arc(p.x,p.y,3,0,Math.PI*2);ovX.fill();
+        }
+      }
+    }
+    // Road being built
+    if(roadBuilding&&roadBuilding.length>0){
+      ovX.strokeStyle='rgba(212,168,67,.7)';ovX.lineWidth=2;ovX.setLineDash([4,4]);
+      ovX.beginPath();
+      for(let i=0;i<roadBuilding.length;i++){
+        const p=worldToScreen(roadBuilding[i][0],roadBuilding[i][1]);
+        if(i===0)ovX.moveTo(p.x,p.y);else ovX.lineTo(p.x,p.y);
+      }
+      ovX.stroke();ovX.setLineDash([]);
+      for(let i=0;i<roadBuilding.length;i++){
+        const p=worldToScreen(roadBuilding[i][0],roadBuilding[i][1]);
+        ovX.fillStyle='rgba(212,168,67,.8)';
+        ovX.beginPath();ovX.arc(p.x,p.y,4,0,Math.PI*2);ovX.fill();
+      }
+    }
+  }
+
+  // ── QUEST PATH LAYER ──
+  if(layers.quests){
+    for(let qi=0;qi<QS.length;qi++){
+      const q=QS[qi];
+      const isSel=selected&&selected.type==='quest'&&selected.idx===qi;
+      const col=QUEST_COLORS[q.tp]||'#888';
+      const pts=q.st.filter(s=>s.x||s.y).map(s=>({x:s.x,y:s.y,t:s.t,tx:s.tx}));
+      if(pts.length<1)continue;
+
+      // Draw path lines
+      if(pts.length>1){
+        ovX.strokeStyle=isSel?col+'cc':col+'40';
+        ovX.lineWidth=isSel?2:1;
+        ovX.setLineDash([3,3]);
+        ovX.beginPath();
+        for(let i=0;i<pts.length;i++){
+          const p=worldToScreen(pts[i].x,pts[i].y);
+          if(i===0)ovX.moveTo(p.x,p.y);else ovX.lineTo(p.x,p.y);
+        }
+        ovX.stroke();ovX.setLineDash([]);
+      }
+
+      // Draw step markers
+      for(let i=0;i<pts.length;i++){
+        const pt=pts[i];
+        const p=worldToScreen(pt.x,pt.y);
+        const r=isSel?6:4;
+
+        // Step type icon
+        if(pt.t==='combat'){
+          // X shape for combat
+          ovX.strokeStyle=isSel?'#c04040':'#c0404080';
+          ovX.lineWidth=2;
+          ovX.beginPath();ovX.moveTo(p.x-r,p.y-r);ovX.lineTo(p.x+r,p.y+r);ovX.stroke();
+          ovX.beginPath();ovX.moveTo(p.x+r,p.y-r);ovX.lineTo(p.x-r,p.y+r);ovX.stroke();
+        } else if(pt.t==='discover'){
+          // Star for discover
+          ovX.fillStyle=isSel?'#d4a843':'#d4a84380';
+          ovX.beginPath();
+          for(let a=0;a<5;a++){
+            const ang=a*Math.PI*2/5-Math.PI/2;
+            const ox=p.x+Math.cos(ang)*(r+2), oy=p.y+Math.sin(ang)*(r+2);
+            if(a===0)ovX.moveTo(ox,oy);else ovX.lineTo(ox,oy);
+            const ang2=ang+Math.PI/5;
+            ovX.lineTo(p.x+Math.cos(ang2)*r*.4, p.y+Math.sin(ang2)*r*.4);
+          }
+          ovX.closePath();ovX.fill();
+        } else {
+          // Circle for travel
+          ovX.fillStyle=isSel?col:col+'80';
+          ovX.beginPath();ovX.arc(p.x,p.y,r,0,Math.PI*2);ovX.fill();
+        }
+
+        // Label on zoom
+        if(zoom>0.08&&pt.tx&&isSel){
+          ovX.fillStyle='rgba(255,255,255,.6)';
+          ovX.font='10px "IBM Plex Sans"';ovX.textAlign='center';
+          ovX.fillText(pt.tx,p.x,p.y-r-4);
+        }
+      }
+
+      // Quest name label
+      if(zoom>0.05&&pts.length>0){
+        const fp=worldToScreen(pts[0].x,pts[0].y);
+        ovX.fillStyle=isSel?col:col+'60';
+        ovX.font=(isSel?'700 ':'600 ')+Math.max(9,Math.min(12,100*zoom))+'px "IBM Plex Sans"';
+        ovX.textAlign='left';
+        ovX.fillText('['+q.tp+'] '+q.n,fp.x+8,fp.y+3);
+      }
+    }
+  }
+
+  // ── TOWN LAYER ──
+  if(layers.towns){
+    for(let ti=0;ti<TWN.length;ti++){
+      const t=TWN[ti];
+      const p=worldToScreen(t.x,t.y);
+      const isSel=selected&&selected.type==='town'&&selected.idx===ti;
+      const r=Math.max(4, (t.r||50)*zoom);
+
+      // Town radius circle
+      if(zoom>0.02){
+        ovX.strokeStyle=isSel?'rgba(212,168,67,.5)':'rgba(212,168,67,.15)';
+        ovX.lineWidth=1;
+        ovX.beginPath();ovX.arc(p.x,p.y,r,0,Math.PI*2);ovX.stroke();
+      }
+
+      // Town dot
+      const dotR=isSel?7:5;
+      ovX.fillStyle=t.merchant?'#e0a020':isSel?'#d4a843':'rgba(212,168,67,.7)';
+      ovX.beginPath();ovX.arc(p.x,p.y,dotR,0,Math.PI*2);ovX.fill();
+
+      if(isSel){
+        ovX.strokeStyle='rgba(212,168,67,.6)';ovX.lineWidth=2;
+        ovX.beginPath();ovX.arc(p.x,p.y,dotR+3,0,Math.PI*2);ovX.stroke();
+      }
+
+      // Label
+      if(zoom>0.04){
+        ovX.fillStyle=isSel?'rgba(255,255,255,.9)':'rgba(212,168,67,.5)';
+        ovX.font=(isSel?'700 ':'600 ')+Math.max(9,Math.min(14,120*zoom))+'px "IBM Plex Sans"';
+        ovX.textAlign='center';
+        ovX.fillText(t.n,p.x,p.y-dotR-5);
+        if(t.merchant&&zoom>0.06){
+          ovX.fillStyle='rgba(224,160,32,.4)';
+          ovX.font='10px "IBM Plex Sans"';
+          ovX.fillText('SHOP',p.x,p.y+dotR+12);
+        }
+      }
+    }
+  }
+
+  // ── ENEMY LAYER (shows combat locations from quests) ──
+  if(layers.enemies){
+    // Collect unique combat locations
+    let combatLocs=[];
+    for(let q of QS){
+      for(let s of q.st){
+        if(s.t==='combat'&&(s.x||s.y)){
+          let eName=s.en||'Unknown';
+          let existing=combatLocs.find(cl=>Math.abs(cl.x-s.x)<100&&Math.abs(cl.y-s.y)<100);
+          if(existing){
+            if(!existing.enemies.includes(eName))existing.enemies.push(eName);
+          } else {
+            combatLocs.push({x:s.x,y:s.y,enemies:[eName],ct:s.ct,quest:q.n});
+          }
+        }
+      }
+    }
+    for(let cl of combatLocs){
+      const p=worldToScreen(cl.x,cl.y);
+      // Danger zone
+      ovX.fillStyle='rgba(192,64,64,.06)';
+      ovX.beginPath();ovX.arc(p.x,p.y,30*zoom,0,Math.PI*2);ovX.fill();
+      // Skull marker
+      ovX.fillStyle='rgba(192,64,64,.5)';
+      ovX.font='bold '+Math.max(8,12*zoom)+'px "IBM Plex Mono"';
+      ovX.textAlign='center';ovX.textBaseline='middle';
+      ovX.fillText('X',p.x,p.y);
+      // Label
+      if(zoom>0.08){
+        ovX.fillStyle='rgba(192,64,64,.4)';
+        ovX.font='9px "IBM Plex Sans"';ovX.textBaseline='top';
+        ovX.fillText(cl.enemies.join(', '),p.x,p.y+8);
+      }
+    }
+  }
+
+  // ── PLAYER START ──
+  const ps=worldToScreen(900,2600);
+  ovX.fillStyle='rgba(255,255,255,.8)';
+  ovX.beginPath();ovX.arc(ps.x,ps.y,6,0,Math.PI*2);ovX.fill();
+  ovX.strokeStyle='rgba(255,255,255,.3)';ovX.lineWidth=1;
+  ovX.beginPath();ovX.arc(ps.x,ps.y,10,0,Math.PI*2);ovX.stroke();
+  if(zoom>0.04){
+    ovX.fillStyle='rgba(255,255,255,.4)';
+    ovX.font='600 10px "IBM Plex Sans"';ovX.textAlign='center';ovX.textBaseline='top';
+    ovX.fillText('SPAWN',ps.x,ps.y+14);
+  }
+
+  // ── MINIMAP ──
+  renderMinimap(tl,br);
+
+  // Update bottom bar
+  document.getElementById('bb-zoom').textContent=Math.round(zoom*100)+'%';
+}
+
+function renderMinimap(tl,br){
+  const mw=200,mh=150;
+  const sx=mw/WW,sy=mh/WH;
+  mmX.fillStyle='#09090c';mmX.fillRect(0,0,mw,mh);
+
+  // Biomes
+  for(let b of BIO){
+    mmX.fillStyle=b.c;
+    mmX.fillRect(b.x*sx,b.y*sy,b.w*sx,b.h*sy);
+  }
+  // Roads
+  mmX.strokeStyle='rgba(200,180,140,.2)';mmX.lineWidth=1;mmX.lineCap='round';
+  for(let r of RD){
+    mmX.beginPath();
+    for(let i=0;i<r.length;i++){
+      if(i===0)mmX.moveTo(r[i][0]*sx,r[i][1]*sy);
+      else mmX.lineTo(r[i][0]*sx,r[i][1]*sy);
+    }
+    mmX.stroke();
+  }
+  // Towns
+  for(let t of TWN){
+    mmX.fillStyle=t.merchant?'#e0a020':'rgba(212,168,67,.6)';
+    mmX.beginPath();mmX.arc(t.x*sx,t.y*sy,2,0,Math.PI*2);mmX.fill();
+  }
+  // Quest points
+  for(let q of QS){
+    mmX.fillStyle=QUEST_COLORS[q.tp]+'60';
+    for(let s of q.st){
+      if(s.x||s.y){
+        mmX.beginPath();mmX.arc(s.x*sx,s.y*sy,1,0,Math.PI*2);mmX.fill();
+      }
+    }
+  }
+  // Viewport rectangle
+  if(tl&&br){
+    mmX.strokeStyle='rgba(255,255,255,.5)';mmX.lineWidth=1;
+    let vx=Math.max(0,tl.x)*sx, vy=Math.max(0,tl.y)*sy;
+    let vw=(Math.min(WW,br.x)-Math.max(0,tl.x))*sx;
+    let vh=(Math.min(WH,br.y)-Math.max(0,tl.y))*sy;
+    mmX.strokeRect(vx,vy,vw,vh);
+  }
+  // Player spawn
+  mmX.fillStyle='#fff';
+  mmX.beginPath();mmX.arc(900*sx,2600*sy,2,0,Math.PI*2);mmX.fill();
+}
+
+// ═══════════════════════════════════════════════════════════
+// HIT TESTING
+// ═══════════════════════════════════════════════════════════
+function hitTest(wx,wy){
+  // Road waypoints (small targets, highest priority when close)
+  for(let ri=0;ri<RD.length;ri++){
+    const rd=RD[ri];
+    for(let pi=0;pi<rd.length;pi++){
+      if(Math.hypot(rd[pi][0]-wx,rd[pi][1]-wy)<40)
+        return{type:'roadpt',idx:ri,ptIdx:pi};
+    }
+  }
+  // Towns
+  for(let i=0;i<TWN.length;i++){
+    if(Math.hypot(TWN[i].x-wx,TWN[i].y-wy)<Math.max(40,TWN[i].r||50))
+      return{type:'town',idx:i,data:TWN[i]};
+  }
+  // Quest steps (individual points — draggable)
+  for(let qi=0;qi<QS.length;qi++){
+    const q=QS[qi];
+    for(let si=0;si<q.st.length;si++){
+      const s=q.st[si];
+      if((s.x||s.y)&&Math.hypot(s.x-wx,s.y-wy)<60)
+        return{type:'quest',idx:qi,stepIdx:si,data:q};
+    }
+  }
+  // Road segments (for selecting the whole road)
+  for(let ri=0;ri<RD.length;ri++){
+    const rd=RD[ri];
+    for(let i=0;i<rd.length-1;i++){
+      const d=distToSegment(wx,wy,rd[i][0],rd[i][1],rd[i+1][0],rd[i+1][1]);
+      if(d<80) return{type:'road',idx:ri};
+    }
+  }
+  return null;
+}
+
+function distToSegment(px,py,x1,y1,x2,y2){
+  const dx=x2-x1, dy=y2-y1;
+  const len2=dx*dx+dy*dy;
+  if(len2===0)return Math.hypot(px-x1,py-y1);
+  let t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/len2));
+  return Math.hypot(px-(x1+t*dx),py-(y1+t*dy));
+}
+
+// ═══════════════════════════════════════════════════════════
+// BIOME LOOKUP
+// ═══════════════════════════════════════════════════════════
+function getBiome(wx,wy){
+  for(let b of BIO){
+    if(wx>=b.x&&wx<b.x+b.w&&wy>=b.y&&wy<b.y+b.h)return b;
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════════
+// EVENTS
+// ═══════════════════════════════════════════════════════════
+ovC.addEventListener('mousedown',e=>{
+  if(e.button===1||(e.button===0&&spaceDown)){
+    panning=true;lastPan={x:e.clientX,y:e.clientY};
+    ovC.style.cursor='grabbing';e.preventDefault();return;
+  }
+  if(e.button===0){
+    const w=screenToWorld(e.offsetX,e.offsetY);
+
+    if(mode==='select'){
+      const hit=hitTest(w.x,w.y);
+      selected=hit;
+      if(hit){
+        dragging={startX:w.x,startY:w.y,origX:0,origY:0};
+        if(hit.type==='town'){
+          dragging.origX=TWN[hit.idx].x;dragging.origY=TWN[hit.idx].y;
+        } else if(hit.type==='quest'&&hit.stepIdx!=null){
+          const s=QS[hit.idx].st[hit.stepIdx];
+          dragging.origX=s.x;dragging.origY=s.y;
+        } else if(hit.type==='roadpt'){
+          dragging.origX=RD[hit.idx][hit.ptIdx][0];dragging.origY=RD[hit.idx][hit.ptIdx][1];
+        }
+      }
+      updateSidePanel();
+      render();
+    } else if(mode==='town'){
+      TWN.push({n:'New Town',x:Math.round(w.x),y:Math.round(w.y),d:'A new settlement.',v:false,r:50});
+      selected={type:'town',idx:TWN.length-1};
+      updateSidePanel();render();
+    } else if(mode==='road'){
+      if(!roadBuilding)roadBuilding=[];
+      roadBuilding.push([Math.round(w.x),Math.round(w.y)]);
+      render();
+    } else if(mode==='quest'){
+      // Place a quest point marker — for reference
+      // Just select nearest quest and show it
+      const hit=hitTest(w.x,w.y);
+      if(hit)selected=hit;
+      updateSidePanel();render();
+    }
+  }
+});
+
+ovC.addEventListener('mousemove',e=>{
+  const w=screenToWorld(e.offsetX,e.offsetY);
+  const wx=Math.round(Math.max(0,Math.min(WW,w.x)));
+  const wy=Math.round(Math.max(0,Math.min(WH,w.y)));
+
+  // Bottom bar
+  document.getElementById('bb-coord').textContent=wx+', '+wy;
+  const bio=getBiome(wx,wy);
+  document.getElementById('bb-biome').textContent=bio?bio.n:'(empty)';
+
+  if(panning){
+    panX+=e.clientX-lastPan.x;
+    panY+=e.clientY-lastPan.y;
+    lastPan={x:e.clientX,y:e.clientY};
+    render();return;
+  }
+
+  // Drag entity
+  if(dragging&&selected&&e.buttons===1){
+    const dx=w.x-dragging.startX, dy=w.y-dragging.startY;
+    if(selected.type==='town'){
+      TWN[selected.idx].x=Math.round(dragging.origX+dx);
+      TWN[selected.idx].y=Math.round(dragging.origY+dy);
+      updateSidePanel();render();return;
+    } else if(selected.type==='quest'&&selected.stepIdx!=null){
+      const s=QS[selected.idx].st[selected.stepIdx];
+      s.x=Math.round(dragging.origX+dx);
+      s.y=Math.round(dragging.origY+dy);
+      updateSidePanel();render();return;
+    } else if(selected.type==='roadpt'){
+      RD[selected.idx][selected.ptIdx][0]=Math.round(dragging.origX+dx);
+      RD[selected.idx][selected.ptIdx][1]=Math.round(dragging.origY+dy);
+      updateSidePanel();render();return;
+    }
+  }
+
+  // Hover info
+  const hit=hitTest(w.x,w.y);
+  const hi=document.getElementById('hover-info');
+  if(hit&&mode==='select'){
+    hi.style.display='block';
+    hi.style.left=(e.offsetX+16)+'px';
+    hi.style.top=(e.offsetY+16)+'px';
+    if(hit.type==='town'){
+      hi.querySelector('.hi-name').textContent=TWN[hit.idx].n;
+      hi.querySelector('.hi-sub').textContent=TWN[hit.idx].d||'';
+      hi.querySelector('.hi-coord').textContent=TWN[hit.idx].x+', '+TWN[hit.idx].y+(TWN[hit.idx].merchant?' (merchant)':'');
+    } else if(hit.type==='quest'){
+      hi.querySelector('.hi-name').textContent='['+hit.data.tp+'] '+hit.data.n;
+      hi.querySelector('.hi-sub').textContent='Lv'+hit.data.lr+' — '+hit.data.ds;
+      hi.querySelector('.hi-coord').textContent='Reward: '+hit.data.rw.e+' XP, '+hit.data.rw.g+' Gold';
+    } else if(hit.type==='roadpt'){
+      hi.querySelector('.hi-name').textContent='Road #'+(hit.idx+1)+' — Point '+(hit.ptIdx+1);
+      hi.querySelector('.hi-sub').textContent='Drag to move this waypoint';
+      hi.querySelector('.hi-coord').textContent=RD[hit.idx][hit.ptIdx][0]+', '+RD[hit.idx][hit.ptIdx][1];
+    } else if(hit.type==='road'){
+      hi.querySelector('.hi-name').textContent='Road #'+(hit.idx+1);
+      hi.querySelector('.hi-sub').textContent=RD[hit.idx].length+' waypoints';
+      hi.querySelector('.hi-coord').textContent='';
+    }
+    hovered=hit;
+    ovC.style.cursor=(hit.type==='town'||hit.type==='quest'||hit.type==='roadpt')?'move':'pointer';
+  } else {
+    hi.style.display='none';
+    hovered=null;
+    if(!panning&&mode==='select')ovC.style.cursor='default';
+  }
+});
+
+ovC.addEventListener('mouseup',()=>{
+  panning=false;dragging=null;
+  ovC.style.cursor=mode==='select'?'default':'crosshair';
+});
+ovC.addEventListener('mouseleave',()=>{
+  panning=false;dragging=null;
+  document.getElementById('hover-info').style.display='none';
+});
+ovC.addEventListener('contextmenu',e=>{
+  e.preventDefault();
+  if(mode==='road'&&roadBuilding&&roadBuilding.length>=2){
+    // Finish road
+    RD.push([...roadBuilding]);
+    selected={type:'road',idx:RD.length-1};
+    roadBuilding=null;
+    updateSidePanel();render();
+  } else if(mode==='road'){
+    roadBuilding=null;render();
+  }
+});
+
+ovC.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const old=zoom;
+  zoom=Math.max(0.01,Math.min(4,zoom*(e.deltaY<0?1.15:0.87)));
+  // Zoom toward cursor
+  const rect=ovC.getBoundingClientRect();
+  const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+  panX=mx-(mx-panX)*(zoom/old);
+  panY=my-(my-panY)*(zoom/old);
+  render();
+},{passive:false});
+
+// Minimap click to navigate
+mmC.addEventListener('mousedown',e=>{
+  const rect=mmC.getBoundingClientRect();
+  const mx=(e.clientX-rect.left)/200*WW;
+  const my=(e.clientY-rect.top)/150*WH;
+  // Center viewport on this world position
+  panX=ovC.width/2-ovC.width/2-(mx-WW/2)*zoom;
+  panY=ovC.height/2-ovC.height/2-(my-WH/2)*zoom;
+  panX=-(mx-WW/2)*zoom;
+  panY=-(my-WH/2)*zoom;
+  render();
+});
+
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+  if(e.code==='Space'){spaceDown=true;ovC.style.cursor='grab';e.preventDefault();}
+  if(e.key==='f'||e.key==='F')fitView();
+  if(e.key==='g'||e.key==='G')toggleLayer('grid');
+  if(e.key==='Tab'){e.preventDefault();toggleSide();}
+  if(e.key==='Escape'){
+    selected=null;roadBuilding=null;setMode('select');
+    updateSidePanel();render();
+  }
+  if(e.key==='Delete'&&selected){
+    if(selected.type==='town'){
+      if(confirm('Delete town "'+TWN[selected.idx].n+'"?')){
+        TWN.splice(selected.idx,1);selected=null;updateSidePanel();render();
+      }
+    } else if(selected.type==='road'){
+      if(confirm('Delete road #'+(selected.idx+1)+'?')){
+        RD.splice(selected.idx,1);selected=null;updateSidePanel();render();
+      }
+    }
+  }
+});
+document.addEventListener('keyup',e=>{
+  if(e.code==='Space'){spaceDown=false;ovC.style.cursor=mode==='select'?'default':'crosshair';}
+});
+
+// ═══════════════════════════════════════════════════════════
+// TOOLBAR
+// ═══════════════════════════════════════════════════════════
+function setMode(m){
+  mode=m;
+  if(m!=='road')roadBuilding=null;
+  document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));
+  ovC.style.cursor=m==='select'?'default':'crosshair';
+  render();
+}
+function toggleLayer(l){
+  layers[l]=!layers[l];
+  document.querySelectorAll('[data-layer="'+l+'"]').forEach(b=>b.classList.toggle('on',layers[l]));
+  render();
+}
+function fitView(){
+  const cw=ovC.width, ch=ovC.height;
+  // Fit content area (6400x5200) with padding
+  zoom=Math.min(cw/(6800), ch/(5600));
+  panX=-(3200-WW/2)*zoom;
+  panY=-(2600-WH/2)*zoom;
+  render();
+}
+function toggleSide(){
+  document.getElementById('side').classList.toggle('collapsed');
+  setTimeout(()=>{resize();},250);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SIDE PANEL
+// ═══════════════════════════════════════════════════════════
+function setSideTab(tab){
+  sideTab=tab;
+  document.querySelectorAll('[data-stab]').forEach(b=>b.classList.toggle('on',b.dataset.stab===tab));
+  updateSidePanel();
+}
+
+function updateSidePanel(){
+  const el=document.getElementById('side-content');
+  if(sideTab==='world')el.innerHTML=buildWorldPanel();
+  else if(sideTab==='quests')el.innerHTML=buildQuestPanel();
+  else if(sideTab==='entities')el.innerHTML=buildEntityPanel();
+
+  // Attach input handlers
+  el.querySelectorAll('input[data-field]').forEach(inp=>{
+    inp.addEventListener('change',handleFieldChange);
+  });
+}
+
+function buildWorldPanel(){
+  let h='';
+  // Stats
+  h+='<div class="sec-hd">World Stats</div>';
+  h+='<div style="font-size:12px;color:var(--tx2);line-height:2;padding:4px 6px;">';
+  h+='World: <span style="color:var(--tx)">'+WW+' x '+WH+'</span><br>';
+  h+='Content area: <span style="color:var(--tx)">6400 x 5200</span><br>';
+  h+='Biomes: <span style="color:var(--tx)">'+BIO.length+'</span><br>';
+  h+='Towns: <span style="color:var(--tx)">'+TWN.length+'</span><br>';
+  h+='Roads: <span style="color:var(--tx)">'+RD.length+'</span><br>';
+  h+='Quests: <span style="color:var(--tx)">'+QS.length+'</span> (M:'+QS.filter(q=>q.tp==='M').length+' S:'+QS.filter(q=>q.tp==='S').length+' B:'+QS.filter(q=>q.tp==='B').length+' G:'+QS.filter(q=>q.tp==='G').length+')<br>';
+  h+='Enemy types: <span style="color:var(--tx)">'+ET.length+'</span><br>';
+  h+='Player spawn: <span style="color:var(--tx)">900, 2600</span>';
+  h+='</div>';
+
+  // Biomes
+  h+='<div class="sec-hd">Biomes</div>';
+  for(let i=0;i<BIO.length;i++){
+    const b=BIO[i];
+    h+='<div class="ent" onclick="panToWorld('+b.x+'+'+b.w+'/2,'+b.y+'+'+b.h+'/2)">';
+    h+='<div class="ent-name"><span class="legend-dot" style="background:'+b.c+';display:inline-block;vertical-align:middle;margin-right:6px"></span>'+b.n+'</div>';
+    h+='<div class="ent-coord">'+b.x+','+b.y+' — '+b.w+'x'+b.h+'</div>';
+    h+='</div>';
+  }
+
+  // Towns
+  h+='<div class="sec-hd">Towns ('+TWN.length+')</div>';
+  for(let i=0;i<TWN.length;i++){
+    const t=TWN[i];
+    const sel=selected&&selected.type==='town'&&selected.idx===i;
+    h+='<div class="ent'+(sel?' sel':'')+'" onclick="selectTown('+i+')">';
+    h+='<div class="ent-name">'+t.n+(t.merchant?' <span style="color:var(--gd);font-size:10px">SHOP</span>':'')+'</div>';
+    h+='<div class="ent-sub">'+t.d+'</div>';
+    h+='<div class="ent-coord">'+t.x+', '+t.y+' · r='+t.r+(t.v?' · visible':'')+'</div>';
+    h+='</div>';
+  }
+
+  return h;
+}
+
+function buildQuestPanel(){
+  let h='';
+  const types=['M','S','B','G'];
+  for(let tp of types){
+    const qs=QS.filter(q=>q.tp===tp);
+    h+='<div class="sec-hd" style="color:'+QUEST_COLORS[tp]+'">'+QUEST_LABELS[tp]+' Quests ('+qs.length+')</div>';
+    for(let q of qs){
+      const qi=QS.indexOf(q);
+      const sel=selected&&selected.type==='quest'&&selected.idx===qi;
+      const pts=q.st.filter(s=>s.x||s.y);
+      h+='<div class="ent'+(sel?' sel':'')+'" onclick="selectQuest('+qi+')">';
+      h+='<div class="ent-name" style="color:'+QUEST_COLORS[tp]+'">'+q.n+'</div>';
+      h+='<div class="ent-sub">Lv'+q.lr+' — '+q.ds+'</div>';
+      h+='<div class="ent-coord">'+q.st.length+' steps · '+pts.length+' locations · '+q.rw.e+'xp/'+q.rw.g+'g</div>';
+
+      // Step breakdown
+      if(sel){
+        h+='<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--bd)">';
+        for(let si=0;si<q.st.length;si++){
+          const s=q.st[si];
+          let icon=s.t==='dlg'?'💬':s.t==='travel'?'🚶':s.t==='combat'?'⚔':s.t==='discover'?'⭐':'?';
+          h+='<div style="font-size:11px;padding:2px 0;color:var(--tx2)">';
+          h+=icon+' '+s.t;
+          if(s.x||s.y)h+=' <span style="color:var(--tx3)">('+s.x+','+s.y+')</span>';
+          if(s.tx)h+=' — '+s.tx;
+          if(s.en)h+=' <span style="color:var(--rd)">'+s.en+'x'+s.ct+'</span>';
+          h+='</div>';
+        }
+        h+='</div>';
+      }
+      h+='</div>';
+    }
+  }
+  return h;
+}
+
+function buildEntityPanel(){
+  let h='';
+
+  // Enemies
+  h+='<div class="sec-hd">Enemy Types ('+ET.length+')</div>';
+  for(let e of ET){
+    h+='<div class="ent">';
+    h+='<div class="ent-name"><span class="legend-dot" style="background:'+e.c+';display:inline-block;vertical-align:middle;margin-right:6px"></span>'+e.n+'</div>';
+    h+='<div class="ent-sub">HP:'+e.hp+' ATK:'+e.a+' · '+e.xp+'xp/'+e.g+'g</div>';
+    h+='</div>';
+  }
+
+  // Selected entity details (editable)
+  if(selected&&selected.type==='town'){
+    const t=TWN[selected.idx];
+    h+='<div class="sec-hd">Edit Town</div>';
+    h+='<div style="padding:6px;font-size:12px;">';
+    h+='<label style="display:block;margin:4px 0;color:var(--tx2)">Name<br><input data-field="town-name" value="'+escHtml(t.n)+'" style="width:100%;background:rgba(0,0,0,.3);border:1px solid var(--bd);color:var(--tx);padding:4px 8px;border-radius:4px;font-family:var(--fn);font-size:12px;margin-top:2px;"></label>';
+    h+='<label style="display:block;margin:4px 0;color:var(--tx2)">Description<br><input data-field="town-desc" value="'+escHtml(t.d||'')+'" style="width:100%;background:rgba(0,0,0,.3);border:1px solid var(--bd);color:var(--tx);padding:4px 8px;border-radius:4px;font-family:var(--fn);font-size:12px;margin-top:2px;"></label>';
+    h+='<div style="display:flex;gap:8px;margin:4px 0">';
+    h+='<label style="flex:1;color:var(--tx2)">X<br><input data-field="town-x" type="number" value="'+t.x+'" style="width:100%;background:rgba(0,0,0,.3);border:1px solid var(--bd);color:var(--tx);padding:4px 8px;border-radius:4px;font-family:var(--mn);font-size:12px;margin-top:2px;"></label>';
+    h+='<label style="flex:1;color:var(--tx2)">Y<br><input data-field="town-y" type="number" value="'+t.y+'" style="width:100%;background:rgba(0,0,0,.3);border:1px solid var(--bd);color:var(--tx);padding:4px 8px;border-radius:4px;font-family:var(--mn);font-size:12px;margin-top:2px;"></label>';
+    h+='<label style="flex:1;color:var(--tx2)">Radius<br><input data-field="town-r" type="number" value="'+(t.r||50)+'" style="width:100%;background:rgba(0,0,0,.3);border:1px solid var(--bd);color:var(--tx);padding:4px 8px;border-radius:4px;font-family:var(--mn);font-size:12px;margin-top:2px;"></label>';
+    h+='</div>';
+    h+='</div>';
+  }
+
+  // Legend
+  h+='<div class="sec-hd">Legend</div>';
+  h+='<div class="legend">';
+  h+='<div class="legend-item"><div class="legend-dot" style="background:#d4a843"></div>Town</div>';
+  h+='<div class="legend-item"><div class="legend-dot" style="background:#e0a020"></div>Merchant</div>';
+  h+='<div class="legend-item"><div class="legend-dot" style="background:#fff"></div>Spawn</div>';
+  h+='<div class="legend-item"><div class="legend-line" style="background:rgba(200,180,140,.5)"></div>Road</div>';
+  h+='<div class="legend-item"><div class="legend-dot" style="background:#e0e0e0"></div>Main Q</div>';
+  h+='<div class="legend-item"><div class="legend-dot" style="background:#5080b0"></div>Side Q</div>';
+  h+='<div class="legend-item"><div class="legend-dot" style="background:#c04040"></div>Bounty</div>';
+  h+='<div class="legend-item"><div class="legend-dot" style="background:#5a9a4a"></div>Gather</div>';
+  h+='</div>';
+
+  return h;
+}
+
+function handleFieldChange(e){
+  const f=e.target.dataset.field;
+  if(!selected)return;
+  if(selected.type==='town'){
+    const t=TWN[selected.idx];
+    if(f==='town-name')t.n=e.target.value;
+    if(f==='town-desc')t.d=e.target.value;
+    if(f==='town-x')t.x=parseInt(e.target.value)||0;
+    if(f==='town-y')t.y=parseInt(e.target.value)||0;
+    if(f==='town-r')t.r=parseInt(e.target.value)||50;
+    render();
+  }
+}
+
+function escHtml(s){return s.replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+
+function selectTown(i){
+  selected={type:'town',idx:i};
+  panToWorld(TWN[i].x,TWN[i].y);
+  updateSidePanel();render();
+}
+function selectQuest(i){
+  selected={type:'quest',idx:i};
+  const pts=QS[i].st.filter(s=>s.x||s.y);
+  if(pts.length>0)panToWorld(pts[0].x,pts[0].y);
+  updateSidePanel();render();
+}
+function panToWorld(wx,wy){
+  panX=-(wx-WW/2)*zoom;
+  panY=-(wy-WH/2)*zoom;
+  render();
+}
+
+// ═══════════════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════════════
+function doExport(){
+  let out='// ═══ EXPORTED WORLD DATA ═══\n';
+  out+='// Generated by Quest Complete World Editor\n';
+  out+='// Paste into index.html to update game world\n\n';
+
+  // Biomes
+  out+='const BIO=[\n';
+  for(let b of BIO)out+="  {n:'"+b.n+"',c:'"+b.c+"',x:"+b.x+",y:"+b.y+",w:"+b.w+",h:"+b.h+"},\n";
+  out+='];\n\n';
+
+  // Towns
+  out+='const TWN=[\n';
+  for(let t of TWN){
+    out+="  {n:'"+t.n+"',x:"+t.x+",y:"+t.y+",d:'"+escJs(t.d||'')+"',v:"+(t.v?'true':'false')+",r:"+(t.r||50);
+    if(t.merchant)out+=',merchant:true';
+    out+='},\n';
+  }
+  out+='];\n\n';
+
+  // Roads
+  out+='const RD=[\n';
+  for(let r of RD){
+    out+='  ['+r.map(p=>'['+p[0]+','+p[1]+']').join(',')+'],\n';
+  }
+  out+='];\n';
+
+  document.getElementById('exportArea').value=out;
+  document.getElementById('modal').classList.remove('h');
+}
+
+function escJs(s){return s.replace(/'/g,"\\'");}
+
+function copyExport(){
+  const ta=document.getElementById('exportArea');
+  ta.select();navigator.clipboard.writeText(ta.value);
+  const btn=document.querySelector('.modal-foot .export');
+  btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy to Clipboard',1500);
+}
+function closeModal(){document.getElementById('modal').classList.add('h');}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+resize();
+fitView();
+updateSidePanel();
+</script>
+</body>
+</html>
