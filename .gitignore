@@ -13,6 +13,7 @@ assets/maps/minimap.png
 assets/maps/cmap/cmap-no-water.png
 assets/maps/cmap/cmap-objects.png
 assets/maps/cmap/map.png
+assets/maps/cmap/cmap.psd
 
 # Python virtual environment
 .venv/
