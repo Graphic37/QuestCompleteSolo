@@ -10,9 +10,9 @@ assets/maps/tiles_q100/
 assets/maps/minimap.png
 
 # Collision map source files
-assets/cmaps/cmap-no-water.png
-assets/cmaps/cmap-objects.png
-assets/cmaps/map.png
+assets/maps/cmap/cmap-no-water.png
+assets/maps/cmap/cmap-objects.png
+assets/maps/cmap/map.png
 
 # Python virtual environment
 .venv/
