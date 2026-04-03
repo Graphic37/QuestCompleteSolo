@@ -1,0 +1,1389 @@
+{
+  "quests": [
+    {
+      "id": "m1",
+      "name": "The Road Ahead",
+      "type": "M",
+      "chapter": 1,
+      "description": "Speak with Elder Thomas and learn about the realm.",
+      "levelReq": 1,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Elder Thomas"},
+        {"type": "travel", "node": "old-shrine", "text": "Visit the old shrine"},
+        {"type": "dlg", "text": "Learn about the shrine and the threats beyond"},
+        {"type": "travel", "node": "willowbrook", "text": "Return to Willowbrook"},
+        {"type": "dlg", "text": "Receive the Waystone of Guidance"}
+      ],
+      "rewards": {"xp": 40, "gold": 25},
+      "lore": "Elder Thomas entrusted you with the Waystone of Guidance — an ancient relic that guides heroes on their path.",
+      "unlocks": ["m2", "s1", "s2"],
+      "dialogue": [
+        {"speaker": "Elder Thomas", "text": "Welcome, traveler. You've arrived at a troubled time. The Greenhollow Plains were once peaceful, but darkness creeps from the Darkwood to the north. Our realm needs a hero."},
+        {"speaker": "Elder Thomas", "text": "This old shrine marks the edge of our lands. Beyond lies the unknown. The creatures grow bolder every day, and the ancient Wardstones that protect us are failing."},
+        {"speaker": "Elder Thomas", "text": "Take this — the Waystone of Guidance. It was forged by the first druids to lead heroes through the realm. With it, your path will always be clear. Go now, and may the light guide you."}
+      ]
+    },
+    {
+      "id": "m2",
+      "name": "Into the Darkwood",
+      "type": "M",
+      "chapter": 1,
+      "description": "Investigate why creatures flee the forest.",
+      "levelReq": 2,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Scout Helia about the forest"},
+        {"type": "travel", "node": "darkwood-entry", "text": "Enter the Darkwood"},
+        {"type": "combat", "text": "Calm 2 spirits", "enemy": "Forest Spirit", "count": 2},
+        {"type": "discover", "node": "eldergrove", "text": "Find Eldergrove"},
+        {"type": "dlg", "text": "Speak with Archdruid Yennefer"}
+      ],
+      "rewards": {"xp": 100, "gold": 45},
+      "lore": "Ancient wards are failing.",
+      "unlocks": ["m3", "s3", "s4", "bw1", "fm1"],
+      "dialogue": [
+        {"speaker": "Scout Helia", "text": "The forest is restless. Animals flee south, spirits attack anything that moves."},
+        {"speaker": "Archdruid Yennefer", "text": "Welcome to Eldergrove. The forest screams of corruption. We need your help."}
+      ]
+    },
+    {
+      "id": "m3",
+      "name": "Corruption's Root",
+      "type": "M",
+      "chapter": 2,
+      "description": "Find the source of corruption.",
+      "levelReq": 3,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Archdruid Yennefer about the corruption"},
+        {"type": "travel", "node": "corruption-site", "text": "Journey to corruption site"},
+        {"type": "combat", "text": "Defeat corrupted spirits", "enemy": "Forest Spirit", "count": 3},
+        {"type": "travel", "node": "eldergrove", "text": "Report to Eldergrove"},
+        {"type": "dlg", "text": "Learn about the broken Wardstone"}
+      ],
+      "rewards": {"xp": 140, "gold": 60},
+      "lore": "A shattered Wardstone leaks sealing magic.",
+      "unlocks": ["m4", "s5", "s6"],
+      "dialogue": [
+        {"speaker": "Archdruid Yennefer", "text": "The corruption stems from the northeast. An old power stirs there."},
+        {"speaker": "Archdruid Yennefer", "text": "A Wardstone... broken. There were five, forged to imprison the Betrayer King."}
+      ]
+    },
+    {
+      "id": "m4",
+      "name": "March to Thornwatch",
+      "type": "M",
+      "chapter": 2,
+      "description": "Warn the northern outpost.",
+      "levelReq": 4,
+      "steps": [
+        {"type": "dlg", "text": "Receive orders from Archdruid Yennefer"},
+        {"type": "discover", "node": "thornwatch", "text": "Discover Thornwatch"},
+        {"type": "combat", "text": "Clear the road", "enemy": "Bandit", "count": 4},
+        {"type": "dlg", "text": "Report to Captain Aldric"}
+      ],
+      "rewards": {"xp": 180, "gold": 80},
+      "lore": "The garrison is undermanned.",
+      "unlocks": ["m5", "s7", "s8"],
+      "dialogue": [
+        {"speaker": "Archdruid Yennefer", "text": "Thornwatch must be warned. They'll be the first line of defense."},
+        {"speaker": "Captain Aldric", "text": "Bandits AND forest creatures going mad? Head to the Ironpeaks."}
+      ]
+    },
+    {
+      "id": "m5",
+      "name": "The Ironpeak Ascent",
+      "type": "M",
+      "chapter": 3,
+      "description": "Seek the mountain Wardstone.",
+      "levelReq": 5,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Captain Aldric about the Wardstone"},
+        {"type": "travel", "node": "ironpeak-trail", "text": "Climb the Ironpeaks"},
+        {"type": "combat", "text": "Clear trolls", "enemy": "Cave Troll", "count": 2},
+        {"type": "discover", "node": "ironhaven", "text": "Find Ironhaven"},
+        {"type": "dlg", "text": "Speak with Commander Theron"}
+      ],
+      "rewards": {"xp": 240, "gold": 100},
+      "lore": "The Wardstone was taken into the mountains.",
+      "unlocks": ["m6", "s9", "s10", "s11", "sk1", "cr1", "cr2"],
+      "dialogue": [
+        {"speaker": "Captain Aldric", "text": "Old records mention a Wardstone fragment in the Ironpeaks."},
+        {"speaker": "Commander Theron", "text": "The shard was taken to Cinderhold for safekeeping."}
+      ]
+    },
+    {
+      "id": "m6",
+      "name": "Forged in Fire",
+      "type": "M",
+      "chapter": 3,
+      "description": "Journey to the dwarven forge.",
+      "levelReq": 6,
+      "steps": [
+        {"type": "travel", "node": "cinderhold", "text": "Travel to Cinderhold"},
+        {"type": "discover", "node": "cinderhold", "text": "Discover Cinderhold"},
+        {"type": "dlg", "text": "Meet Master Smith Durin"},
+        {"type": "combat", "text": "Defeat forge guardian", "enemy": "Fire Elemental", "count": 1},
+        {"type": "dlg", "text": "Receive the Wardstone shard"}
+      ],
+      "rewards": {"xp": 320, "gold": 140},
+      "lore": "The dwarves forged Wardstones with dragonfire.",
+      "unlocks": ["m7", "s12", "s13", "ac1", "dh1", "cr4"],
+      "dialogue": [
+        {"speaker": "Master Smith Durin", "text": "Our forge guardian has gone berserk — corrupted by dark magic. Defeat it, and the shard is yours."},
+        {"speaker": "Master Smith Durin", "text": "The second fragment lies beneath the Sunspire, across the desert."}
+      ]
+    },
+    {
+      "id": "m7",
+      "name": "Desert Crossing",
+      "type": "M",
+      "chapter": 4,
+      "description": "Cross the Sunscorch Desert.",
+      "levelReq": 7,
+      "steps": [
+        {"type": "dlg", "text": "Receive directions from Master Smith Durin"},
+        {"type": "travel", "node": "desert-entry", "text": "Enter the desert"},
+        {"type": "combat", "text": "Survive wyrm ambush", "enemy": "Sand Wyrm", "count": 2},
+        {"type": "discover", "node": "sunspire", "text": "Discover Sunspire"},
+        {"type": "dlg", "text": "Speak with Elder Solara"}
+      ],
+      "rewards": {"xp": 400, "gold": 180},
+      "lore": "Sunspire was built by vanished Sun Elves.",
+      "unlocks": ["m8", "s14", "s15"],
+      "dialogue": [
+        {"speaker": "Master Smith Durin", "text": "Sand wyrms patrol the dunes. But Sunspire still stands."},
+        {"speaker": "Elder Solara", "text": "A human, carrying a Wardstone shard? Perhaps you are the one the prophecy speaks of."}
+      ]
+    },
+    {
+      "id": "m8",
+      "name": "The Crystal Shore",
+      "type": "M",
+      "chapter": 4,
+      "description": "Gather allies at Mistport.",
+      "levelReq": 8,
+      "steps": [
+        {"type": "discover", "node": "mistport", "text": "Discover Mistport"},
+        {"type": "dlg", "text": "Speak with Harbormaster Voss"},
+        {"type": "combat", "text": "Clear pirates", "enemy": "Bandit", "count": 5},
+        {"type": "dlg", "text": "Mistport pledges support"}
+      ],
+      "rewards": {"xp": 450, "gold": 200},
+      "lore": "Mistport pledges support.",
+      "unlocks": ["m9", "s16", "s17", "ls1"],
+      "dialogue": [
+        {"speaker": "Harbormaster Voss", "text": "Pirates have blockaded our trade routes! Help us clear them."},
+        {"speaker": "Harbormaster Voss", "text": "The seas are clear! Mistport stands with you."}
+      ]
+    },
+    {
+      "id": "m9",
+      "name": "Into the Shadowmere",
+      "type": "M",
+      "chapter": 5,
+      "description": "Enter the realm of darkness.",
+      "levelReq": 9,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Elder Solara about the Shadowmere"},
+        {"type": "travel", "node": "shadowmere-sanctum", "text": "Enter the Shadowmere"},
+        {"type": "combat", "text": "Fight wraiths", "enemy": "Shadow Wraith", "count": 3},
+        {"type": "discover", "node": "shadowmere-sanctum", "text": "Find the Sanctum"},
+        {"type": "dlg", "text": "Speak with Abbot Kael"}
+      ],
+      "rewards": {"xp": 550, "gold": 250},
+      "lore": "The Betrayer King was imprisoned, not destroyed.",
+      "unlocks": ["m10", "s18", "s19", "dk1", "cr5"],
+      "dialogue": [
+        {"speaker": "Elder Solara", "text": "The Shadowmere is where it all began — where the Betrayer King was sealed."},
+        {"speaker": "Abbot Kael", "text": "The ritual to reforge the seal requires all fragments."}
+      ]
+    },
+    {
+      "id": "m10",
+      "name": "Reassembly",
+      "type": "M",
+      "chapter": 5,
+      "description": "Collect remaining shards.",
+      "levelReq": 10,
+      "steps": [
+        {"type": "dlg", "text": "Receive instructions from Abbot Kael"},
+        {"type": "travel", "node": "cinderhold", "text": "Return to Cinderhold"},
+        {"type": "combat", "text": "Defeat vanguard", "enemy": "Dark Knight", "count": 3},
+        {"type": "travel", "node": "sunspire", "text": "Return to Sunspire"},
+        {"type": "combat", "text": "Defeat vanguard", "enemy": "Dark Knight", "count": 3},
+        {"type": "travel", "node": "shadowmere-sanctum", "text": "Return to Sanctum"},
+        {"type": "dlg", "text": "All fragments assembled"}
+      ],
+      "rewards": {"xp": 700, "gold": 350},
+      "lore": "The shards unite. The ritual begins.",
+      "unlocks": ["m11"],
+      "dialogue": [
+        {"speaker": "Abbot Kael", "text": "Gather the remaining shards. The Betrayer's forces will try to stop you."},
+        {"speaker": "Abbot Kael", "text": "All fragments are here. But something approaches..."}
+      ]
+    },
+    {
+      "id": "m11",
+      "name": "The Betrayer's Champion",
+      "type": "M",
+      "chapter": 6,
+      "description": "Defend the Sanctum!",
+      "levelReq": 11,
+      "steps": [
+        {"type": "dlg", "text": "Prepare for the assault"},
+        {"type": "combat", "text": "Repel assault", "enemy": "Shadow Wraith", "count": 4},
+        {"type": "combat", "text": "Slay the champion", "enemy": "Dragon Whelp", "count": 1},
+        {"type": "dlg", "text": "The seal holds"}
+      ],
+      "rewards": {"xp": 900, "gold": 500},
+      "lore": "The champion falls. The seal holds.",
+      "unlocks": ["m12"],
+      "dialogue": [
+        {"speaker": "Abbot Kael", "text": "A corrupted dragon leads the assault! Hold them off!"},
+        {"speaker": "Abbot Kael", "text": "The seal holds. You have saved the realm."}
+      ]
+    },
+    {
+      "id": "m12",
+      "name": "The Eternal Watch",
+      "type": "M",
+      "chapter": 6,
+      "description": "Tour the grateful kingdom.",
+      "levelReq": 12,
+      "steps": [
+        {"type": "dlg", "text": "Begin the victory tour"},
+        {"type": "travel", "node": "willowbrook", "text": "Visit Willowbrook"},
+        {"type": "travel", "node": "eldergrove", "text": "Visit Eldergrove"},
+        {"type": "travel", "node": "ironhaven", "text": "Visit Ironhaven"},
+        {"type": "travel", "node": "sunspire", "text": "Visit Sunspire"},
+        {"type": "travel", "node": "shadowmere-sanctum", "text": "Return to Sanctum"},
+        {"type": "dlg", "text": "Named Warden of the Realm"}
+      ],
+      "rewards": {"xp": 1200, "gold": 800},
+      "lore": "You are named Warden of the Realm.",
+      "unlocks": ["ep1", "ep2", "ep3", "ep4", "ep5", "cr3"],
+      "dialogue": [
+        {"speaker": "Abbot Kael", "text": "Go forth, Warden. Let the people see their savior."},
+        {"speaker": "The People", "text": "Hail, Warden of the Realm! Your name will be sung for a thousand years!"}
+      ]
+    },
+    {
+      "id": "s1",
+      "name": "Herb Gathering",
+      "type": "G",
+      "chapter": 0,
+      "description": "Collect herbs for the healer.",
+      "levelReq": 1,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Healer Mira"},
+        {"type": "travel", "node": "herb-meadow", "text": "Search meadow"},
+        {"type": "travel", "node": "herb-glade", "text": "Search glade"},
+        {"type": "travel", "node": "willowbrook", "text": "Deliver herbs"},
+        {"type": "dlg", "text": "Healer Mira thanks you"}
+      ],
+      "rewards": {"xp": 35, "gold": 18},
+      "lore": "Healer Mira uses ancient elven remedies.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Healer Mira", "text": "My herb stores are running low. Could you gather moonpetal and sunroot?"},
+        {"speaker": "Healer Mira", "text": "Perfect specimens! These will make enough salves for the whole village."}
+      ]
+    },
+    {
+      "id": "s2",
+      "name": "The Well Problem",
+      "type": "S",
+      "chapter": 0,
+      "description": "Something contaminated the well.",
+      "levelReq": 1,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Elder Thomas about the well"},
+        {"type": "travel", "node": "contaminated-well", "text": "Investigate well"},
+        {"type": "combat", "text": "Clear slimes", "enemy": "Slime", "count": 4},
+        {"type": "travel", "node": "willowbrook", "text": "Report back"},
+        {"type": "dlg", "text": "Elder Thomas is relieved"}
+      ],
+      "rewards": {"xp": 40, "gold": 22},
+      "lore": "Slimes nested in the underground spring.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Elder Thomas", "text": "The well water has turned green. Something foul lurks below."},
+        {"speaker": "Elder Thomas", "text": "Slimes in the well! Thank you, adventurer."}
+      ]
+    },
+    {
+      "id": "s3",
+      "name": "The Old Watchtower",
+      "type": "S",
+      "chapter": 0,
+      "description": "Explore ruins north of Eldergrove.",
+      "levelReq": 2,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Druid Fenn about the watchtower"},
+        {"type": "travel", "node": "old-watchtower", "text": "Reach watchtower"},
+        {"type": "combat", "text": "Clear inhabitants", "enemy": "Bone Archer", "count": 3},
+        {"type": "dlg", "text": "Report findings to Druid Fenn"}
+      ],
+      "rewards": {"xp": 60, "gold": 30},
+      "lore": "The watchtower held lost druid scrolls.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Druid Fenn", "text": "An old watchtower stands north. It may hold useful supplies."},
+        {"speaker": "Druid Fenn", "text": "Ancient scrolls! Rituals we thought lost. A great service to the Circle."}
+      ]
+    },
+    {
+      "id": "s4",
+      "name": "Missing Merchant",
+      "type": "S",
+      "chapter": 0,
+      "description": "Find a merchant lost on the road.",
+      "levelReq": 2,
+      "steps": [
+        {"type": "dlg", "text": "Read the guild notice about Merchant Caelen"},
+        {"type": "travel", "node": "forest-road", "text": "Search the road"},
+        {"type": "combat", "text": "Fight wolves", "enemy": "Wolf", "count": 3},
+        {"type": "travel", "node": "eldergrove", "text": "Escort to Eldergrove"},
+        {"type": "dlg", "text": "Merchant Caelen is safe"}
+      ],
+      "rewards": {"xp": 70, "gold": 35},
+      "lore": "Merchant Caelen trades rare herbs.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Guild Notice", "text": "MISSING: Merchant Caelen, last seen on the forest road three days ago."},
+        {"speaker": "Merchant Caelen", "text": "I thought I was done for! Those wolves had me cornered."}
+      ]
+    },
+    {
+      "id": "s5",
+      "name": "Bandit Bounty",
+      "type": "B",
+      "chapter": 0,
+      "description": "Clear a bandit camp.",
+      "levelReq": 3,
+      "steps": [
+        {"type": "dlg", "text": "Read the bounty board"},
+        {"type": "travel", "node": "bandit-camp", "text": "Locate camp"},
+        {"type": "combat", "text": "Clear the camp", "enemy": "Bandit", "count": 5},
+        {"type": "travel", "node": "eldergrove", "text": "Collect bounty"},
+        {"type": "dlg", "text": "Druid Fenn examines the strange sigil"}
+      ],
+      "rewards": {"xp": 100, "gold": 55},
+      "lore": "The bandits carried the Betrayer King's sigil.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Bounty Board", "text": "WANTED: Bandit leader \"Scarface\" and gang. 55 gold reward."},
+        {"speaker": "Druid Fenn", "text": "A strange sigil among their gear... the mark of the Betrayer King."}
+      ]
+    },
+    {
+      "id": "s6",
+      "name": "Haunted Grove",
+      "type": "S",
+      "chapter": 0,
+      "description": "Investigate spectral sightings.",
+      "levelReq": 3,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Woodcutter Bram about the ghost lights"},
+        {"type": "travel", "node": "haunted-grove", "text": "Enter the grove"},
+        {"type": "combat", "text": "Dispel specters", "enemy": "Forest Spirit", "count": 4},
+        {"type": "dlg", "text": "Report to Woodcutter Bram about the shrine"}
+      ],
+      "rewards": {"xp": 90, "gold": 42},
+      "lore": "Restless spirits guarded a forgotten shrine.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Woodcutter Bram", "text": "The old grove east of here... I saw ghost lights."},
+        {"speaker": "Woodcutter Bram", "text": "A shrine? The spirits were protecting their resting place."}
+      ]
+    },
+    {
+      "id": "s7",
+      "name": "Thornwatch Patrol",
+      "type": "S",
+      "chapter": 0,
+      "description": "Join a border patrol.",
+      "levelReq": 4,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Sergeant Cole"},
+        {"type": "travel", "node": "west-patrol", "text": "Patrol west"},
+        {"type": "combat", "text": "Fight raiders", "enemy": "Bandit", "count": 3},
+        {"type": "travel", "node": "east-patrol", "text": "Patrol east"},
+        {"type": "combat", "text": "Fight wolves", "enemy": "Wolf", "count": 3},
+        {"type": "travel", "node": "thornwatch", "text": "Return to post"},
+        {"type": "dlg", "text": "Sergeant Cole commends your service"}
+      ],
+      "rewards": {"xp": 120, "gold": 58},
+      "lore": "The northern border is busier than expected.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Sergeant Cole", "text": "We're short-handed. Care to walk the line with us?"},
+        {"speaker": "Sergeant Cole", "text": "Good patrol. I'll put in a word with the Captain."}
+      ]
+    },
+    {
+      "id": "s8",
+      "name": "Lost Shrine",
+      "type": "G",
+      "chapter": 0,
+      "description": "Find an ancient elven shrine.",
+      "levelReq": 4,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Scholar Aldrin about the old maps"},
+        {"type": "travel", "node": "highland-shrine", "text": "Search highlands"},
+        {"type": "travel", "node": "elven-shrine", "text": "Discover the shrine"},
+        {"type": "dlg", "text": "Scholar Aldrin studies the inscriptions"}
+      ],
+      "rewards": {"xp": 80, "gold": 40},
+      "lore": "The shrine predates human settlement.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Scholar Aldrin", "text": "Old maps mention an elven shrine in the northern highlands."},
+        {"speaker": "Scholar Aldrin", "text": "The inscriptions mention the Wardstones by name!"}
+      ]
+    },
+    {
+      "id": "s9",
+      "name": "Iron Legion Trials",
+      "type": "S",
+      "chapter": 0,
+      "description": "Prove yourself to the Legion.",
+      "levelReq": 5,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Commander Theron about the Trials"},
+        {"type": "combat", "text": "Trial of Arms", "enemy": "Cave Troll", "count": 1},
+        {"type": "combat", "text": "Trial of Will", "enemy": "Dark Knight", "count": 1},
+        {"type": "dlg", "text": "Commander Theron recognizes you as an ally"}
+      ],
+      "rewards": {"xp": 170, "gold": 85},
+      "lore": "The Legion respects strength above all.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Commander Theron", "text": "Prove your worth in the Trials. Every ally must pass them."},
+        {"speaker": "Commander Theron", "text": "The Iron Legion recognizes you as an ally."}
+      ]
+    },
+    {
+      "id": "s10",
+      "name": "Mountain Rescue",
+      "type": "S",
+      "chapter": 0,
+      "description": "Rescue trapped miners.",
+      "levelReq": 5,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Foreman Dag about the trapped miners"},
+        {"type": "travel", "node": "mine-entrance", "text": "Reach the mine"},
+        {"type": "combat", "text": "Clear cave-in creatures", "enemy": "Cave Troll", "count": 2},
+        {"type": "travel", "node": "ironhaven", "text": "Lead miners home"},
+        {"type": "dlg", "text": "Foreman Dag reports ancient tunnels discovered"}
+      ],
+      "rewards": {"xp": 150, "gold": 75},
+      "lore": "The collapse revealed ancient tunnels.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Foreman Dag", "text": "Our miners are trapped! Something is moving in the rubble."},
+        {"speaker": "Foreman Dag", "text": "Safe! But they say the collapse revealed old tunnels with strange markings."}
+      ]
+    },
+    {
+      "id": "s11",
+      "name": "Lake Monster",
+      "type": "B",
+      "chapter": 0,
+      "description": "Hunt the lake beast.",
+      "levelReq": 5,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Fisherman Oden about the lake beast"},
+        {"type": "travel", "node": "lake-shore", "text": "Investigate shore"},
+        {"type": "combat", "text": "Slay the beast", "enemy": "Cave Troll", "count": 2},
+        {"type": "travel", "node": "willowbrook", "text": "Collect bounty"},
+        {"type": "dlg", "text": "Fisherman Oden examines the magic crystals"}
+      ],
+      "rewards": {"xp": 140, "gold": 68},
+      "lore": "Wardstone magic warped the creature.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Fisherman Oden", "text": "Something big lurks beneath. It capsized two boats."},
+        {"speaker": "Fisherman Oden", "text": "The beast is dead! It had magic crystals growing from its body."}
+      ]
+    },
+    {
+      "id": "s12",
+      "name": "Dwarven Trials",
+      "type": "S",
+      "chapter": 0,
+      "description": "Prove your mettle in Cinderhold.",
+      "levelReq": 6,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Master Smith Durin about the trials"},
+        {"type": "combat", "text": "Trial of Strength", "enemy": "Cave Troll", "count": 1},
+        {"type": "combat", "text": "Trial of Flame", "enemy": "Fire Elemental", "count": 1},
+        {"type": "dlg", "text": "Receive the starfall ore blade"}
+      ],
+      "rewards": {"xp": 230, "gold": 110},
+      "lore": "Durin grants you a starfall ore blade.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Master Smith Durin", "text": "Prove you can survive the heat. Our trials will test you."},
+        {"speaker": "Master Smith Durin", "text": "You fight like heroes of old. Take this starfall blade."}
+      ]
+    },
+    {
+      "id": "s13",
+      "name": "Volcanic Vents",
+      "type": "G",
+      "chapter": 0,
+      "description": "Gather rare ore from the wastes.",
+      "levelReq": 6,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Master Smith Durin about starfall ore"},
+        {"type": "travel", "node": "volcanic-vents", "text": "Reach the vents"},
+        {"type": "combat", "text": "Fight creatures", "enemy": "Fire Elemental", "count": 1},
+        {"type": "travel", "node": "cinderhold", "text": "Return ore"},
+        {"type": "dlg", "text": "Master Smith Durin appraises the ore"}
+      ],
+      "rewards": {"xp": 200, "gold": 95},
+      "lore": "Starfall ore forms near active vents.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Master Smith Durin", "text": "Bring back any starfall ore you find. Worth more than gold."},
+        {"speaker": "Master Smith Durin", "text": "Fine ore! The old techniques still work."}
+      ]
+    },
+    {
+      "id": "s14",
+      "name": "Desert Nomads",
+      "type": "S",
+      "chapter": 0,
+      "description": "Help nomads defend their camp.",
+      "levelReq": 7,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Chief Zara"},
+        {"type": "travel", "node": "nomad-camp", "text": "Find camp"},
+        {"type": "combat", "text": "Defend camp", "enemy": "Sand Wyrm", "count": 2},
+        {"type": "dlg", "text": "Chief Zara shares stories of the Sun Elves"}
+      ],
+      "rewards": {"xp": 280, "gold": 130},
+      "lore": "The nomads remember the Sun Elves.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Chief Zara", "text": "The wyrms grow bolder. Help us defend our camp."},
+        {"speaker": "Chief Zara", "text": "My grandmother told stories of the Sun Elves. They went underground."}
+      ]
+    },
+    {
+      "id": "s15",
+      "name": "Oasis Secrets",
+      "type": "G",
+      "chapter": 0,
+      "description": "Explore Sun Elf ruins.",
+      "levelReq": 7,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Elder Solara about the ruins"},
+        {"type": "travel", "node": "sun-elf-ruins", "text": "Reach ruins"},
+        {"type": "combat", "text": "Defeat guardian", "enemy": "Sand Wyrm", "count": 1},
+        {"type": "travel", "node": "sunspire", "text": "Return to Sunspire"},
+        {"type": "dlg", "text": "Elder Solara examines the murals"}
+      ],
+      "rewards": {"xp": 300, "gold": 145},
+      "lore": "Murals depict the original Wardstone forging.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Elder Solara", "text": "Ancient ruins lie southeast. They may hold knowledge we need."},
+        {"speaker": "Elder Solara", "text": "These murals show the forging of the Wardstones!"}
+      ]
+    },
+    {
+      "id": "s16",
+      "name": "Pirate Treasure",
+      "type": "G",
+      "chapter": 0,
+      "description": "Recover stolen goods.",
+      "levelReq": 8,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Merchant Voss about the stolen goods"},
+        {"type": "travel", "node": "pirate-cave", "text": "Find cave"},
+        {"type": "combat", "text": "Clear pirates", "enemy": "Bandit", "count": 5},
+        {"type": "travel", "node": "mistport", "text": "Return goods"},
+        {"type": "dlg", "text": "Merchant Voss rewards you"}
+      ],
+      "rewards": {"xp": 320, "gold": 150},
+      "lore": "The pirates operated for years.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Merchant Voss", "text": "Their loot is in a cave south. Recover our goods!"},
+        {"speaker": "Merchant Voss", "text": "Our goods! Take your share, hero."}
+      ]
+    },
+    {
+      "id": "s17",
+      "name": "Sunken Temple",
+      "type": "S",
+      "chapter": 0,
+      "description": "Explore a submerged ruin.",
+      "levelReq": 8,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Scholar Aldrin about the sunken temple"},
+        {"type": "travel", "node": "sunken-temple", "text": "Reach lake center"},
+        {"type": "combat", "text": "Fight spirits", "enemy": "Shadow Wraith", "count": 2},
+        {"type": "dlg", "text": "Scholar Aldrin examines the fragment"}
+      ],
+      "rewards": {"xp": 280, "gold": 130},
+      "lore": "A Wardstone fragment rests at the lake bottom.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Scholar Aldrin", "text": "A sunken temple in Crystal Lake may contain a Wardstone fragment."},
+        {"speaker": "Scholar Aldrin", "text": "A fragment! Small, but it pulses with power."}
+      ]
+    },
+    {
+      "id": "s18",
+      "name": "Shadow Training",
+      "type": "S",
+      "chapter": 0,
+      "description": "Learn shadow combat.",
+      "levelReq": 9,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Abbot Kael about shadow combat"},
+        {"type": "combat", "text": "Spar with shadows", "enemy": "Shadow Wraith", "count": 2},
+        {"type": "combat", "text": "Advanced training", "enemy": "Dark Knight", "count": 2},
+        {"type": "dlg", "text": "Abbot Kael imparts wisdom about balance"}
+      ],
+      "rewards": {"xp": 400, "gold": 200},
+      "lore": "Balance is the key to true strength.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Abbot Kael", "text": "To fight darkness, you must understand it."},
+        {"speaker": "Abbot Kael", "text": "Remember: the Betrayer King fell because he sought only power."}
+      ]
+    },
+    {
+      "id": "s19",
+      "name": "The Dark Spire",
+      "type": "B",
+      "chapter": 0,
+      "description": "Destroy a dark energy nexus.",
+      "levelReq": 9,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Abbot Kael about the dark spire"},
+        {"type": "travel", "node": "dark-spire", "text": "Find the spire"},
+        {"type": "combat", "text": "Destroy guardians", "enemy": "Shadow Wraith", "count": 3},
+        {"type": "combat", "text": "Destroy nexus", "enemy": "Wraith Lord", "count": 1},
+        {"type": "dlg", "text": "The Betrayer King's grip weakens"}
+      ],
+      "rewards": {"xp": 500, "gold": 250},
+      "lore": "The nexus fed power to the Betrayer King.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Abbot Kael", "text": "A dark spire channels power to weaken the prison from within."},
+        {"speaker": "Abbot Kael", "text": "Destroyed! The Betrayer King's grip weakens."}
+      ]
+    },
+    {
+      "id": "ep1",
+      "name": "The Frozen North",
+      "type": "S",
+      "chapter": 0,
+      "description": "Explore beyond the map.",
+      "levelReq": 11,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Explorer Finn about the northern reaches"},
+        {"type": "travel", "node": "frozen-north", "text": "Journey north"},
+        {"type": "combat", "text": "Fight frost creatures", "enemy": "Bone Archer", "count": 5},
+        {"type": "combat", "text": "Defeat frost lord", "enemy": "Wraith Lord", "count": 1},
+        {"type": "dlg", "text": "Explorer Finn marvels at the ancient artifacts"}
+      ],
+      "rewards": {"xp": 600, "gold": 300},
+      "lore": "A frozen waste with ancient dangers.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Explorer Finn", "text": "I've mapped the northern reaches. Ice and treasure await."},
+        {"speaker": "Explorer Finn", "text": "A frost giant guarding ancient artifacts!"}
+      ]
+    },
+    {
+      "id": "ep2",
+      "name": "Depths of Cinderhold",
+      "type": "S",
+      "chapter": 0,
+      "description": "Explore deep mines.",
+      "levelReq": 11,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Master Smith Durin about the deep tunnels"},
+        {"type": "travel", "node": "deep-mines", "text": "Enter deep mines"},
+        {"type": "combat", "text": "Fight lava creatures", "enemy": "Fire Elemental", "count": 3},
+        {"type": "dlg", "text": "Discover tunnels made by the first dwarves"}
+      ],
+      "rewards": {"xp": 650, "gold": 320},
+      "lore": "The tunnels connect to something ancient.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Master Smith Durin", "text": "We've broken through to deeper tunnels. Ancient ones."},
+        {"speaker": "Master Smith Durin", "text": "Made by the first dwarves who forged the original Wardstones."}
+      ]
+    },
+    {
+      "id": "ep3",
+      "name": "Ghost Fleet",
+      "type": "B",
+      "chapter": 0,
+      "description": "Defeat spectral ships.",
+      "levelReq": 11,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Harbormaster Voss about the ghost ships"},
+        {"type": "travel", "node": "ghost-ship", "text": "Board ghost ship"},
+        {"type": "combat", "text": "Fight crew", "enemy": "Shadow Wraith", "count": 4},
+        {"type": "combat", "text": "Defeat captain", "enemy": "Wraith Lord", "count": 1},
+        {"type": "dlg", "text": "The Betrayer King's fleet is defeated"}
+      ],
+      "rewards": {"xp": 700, "gold": 350},
+      "lore": "The ghost fleet sailed in the Betrayer King's navy.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Harbormaster Voss", "text": "Ghost ships on the lake! An entire fleet."},
+        {"speaker": "Harbormaster Voss", "text": "The Betrayer King's fleet, still sailing after centuries."}
+      ]
+    },
+    {
+      "id": "ep4",
+      "name": "The World Tree",
+      "type": "G",
+      "chapter": 0,
+      "description": "Find the legendary World Tree.",
+      "levelReq": 12,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Archdruid Yennefer about the World Tree"},
+        {"type": "travel", "node": "world-tree", "text": "Journey deep into Darkwood"},
+        {"type": "combat", "text": "Pass guardians", "enemy": "Forest Spirit", "count": 4},
+        {"type": "dlg", "text": "Witness the World Tree's roots connecting all life"}
+      ],
+      "rewards": {"xp": 600, "gold": 280},
+      "lore": "Source of all natural magic.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Archdruid Yennefer", "text": "Deep in the Darkwood stands the World Tree."},
+        {"speaker": "Archdruid Yennefer", "text": "Its roots connect all living things."}
+      ]
+    },
+    {
+      "id": "ep5",
+      "name": "Eternal Vigil",
+      "type": "S",
+      "chapter": 0,
+      "description": "Establish watch posts.",
+      "levelReq": 12,
+      "steps": [
+        {"type": "dlg", "text": "Receive orders from Commander Theron"},
+        {"type": "travel", "node": "thornwatch", "text": "Thornwatch post"},
+        {"type": "travel", "node": "ironhaven", "text": "Ironhaven post"},
+        {"type": "travel", "node": "sunspire", "text": "Sunspire post"},
+        {"type": "travel", "node": "shadowmere-sanctum", "text": "Sanctum post"},
+        {"type": "dlg", "text": "The Eternal Watch network is complete"}
+      ],
+      "rewards": {"xp": 1000, "gold": 500},
+      "lore": "The Eternal Watch network spans the realm.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Commander Theron", "text": "Establish watch posts at every settlement."},
+        {"speaker": "Commander Theron", "text": "The network is complete. The realm sleeps safer tonight, Warden."}
+      ]
+    },
+    {
+      "id": "bw1",
+      "name": "Timber Trouble",
+      "type": "S",
+      "chapter": 0,
+      "description": "Loggers at Briarwood need help clearing beasts.",
+      "levelReq": 2,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Foreman Hask about the wolf problem"},
+        {"type": "travel", "node": "briarwood", "text": "Travel to Briarwood"},
+        {"type": "combat", "text": "Clear wolves from the mill", "enemy": "Wolf", "count": 4},
+        {"type": "dlg", "text": "Foreman Hask pays you for the work"}
+      ],
+      "rewards": {"xp": 55, "gold": 28},
+      "lore": "The lumber mill is vital to the region's economy.",
+      "unlocks": ["bw2", "bw3"],
+      "dialogue": [
+        {"speaker": "Foreman Hask", "text": "Wolves are denning under the mill platform. We can't work like this."},
+        {"speaker": "Foreman Hask", "text": "The mill runs again! Here's your pay, adventurer."}
+      ]
+    },
+    {
+      "id": "bw2",
+      "name": "The Poacher",
+      "type": "B",
+      "chapter": 0,
+      "description": "A poacher is trapping animals near Briarwood.",
+      "levelReq": 3,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Ranger Wynn about the traps"},
+        {"type": "travel", "node": "trapline", "text": "Search the trapline"},
+        {"type": "combat", "text": "Confront the poacher", "enemy": "Bandit", "count": 2},
+        {"type": "travel", "node": "briarwood", "text": "Report to Briarwood"},
+        {"type": "dlg", "text": "Ranger Wynn discovers the smuggler's mark"}
+      ],
+      "rewards": {"xp": 75, "gold": 38},
+      "lore": "The poacher worked for a smuggling ring.",
+      "unlocks": ["bw4"],
+      "dialogue": [
+        {"speaker": "Ranger Wynn", "text": "Someone is setting steel traps. The animals suffer needlessly."},
+        {"speaker": "Ranger Wynn", "text": "A smuggler's mark on his gear. This goes deeper than poaching."}
+      ]
+    },
+    {
+      "id": "bw3",
+      "name": "Ancient Stump",
+      "type": "G",
+      "chapter": 0,
+      "description": "A druid needs heartwood from the oldest tree.",
+      "levelReq": 2,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Druid Lira about the heartwood"},
+        {"type": "travel", "node": "ancient-stump", "text": "Find the ancient stump"},
+        {"type": "travel", "node": "briarwood", "text": "Deliver heartwood"},
+        {"type": "dlg", "text": "Druid Lira senses the living magic"}
+      ],
+      "rewards": {"xp": 45, "gold": 22},
+      "lore": "The heartwood still holds living magic.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Druid Lira", "text": "The great stump east of here still breathes with old magic. Bring me its heartwood."},
+        {"speaker": "Druid Lira", "text": "I can feel the pulse within. This will heal many."}
+      ]
+    },
+    {
+      "id": "bw4",
+      "name": "Smuggler's Trail",
+      "type": "S",
+      "chapter": 0,
+      "description": "Follow the smuggling trail from Briarwood.",
+      "levelReq": 4,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Ranger Wynn about the smuggler trail"},
+        {"type": "travel", "node": "smuggler-trail", "text": "Follow the trail north"},
+        {"type": "combat", "text": "Clear the smuggler camp", "enemy": "Bandit", "count": 5},
+        {"type": "dlg", "text": "Wardstone fragments discovered in the cargo"}
+      ],
+      "rewards": {"xp": 110, "gold": 55},
+      "lore": "The smugglers were moving Wardstone fragments.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Ranger Wynn", "text": "The trail leads north into the forest. Be careful — there could be many."},
+        {"speaker": "Ranger Wynn", "text": "Wardstone fragments in their cargo? Someone is collecting these on purpose."}
+      ]
+    },
+    {
+      "id": "fm1",
+      "name": "Ice Fishing",
+      "type": "G",
+      "chapter": 0,
+      "description": "Frostmere's lake has frozen over early.",
+      "levelReq": 2,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Elder Sif about the frozen lake"},
+        {"type": "travel", "node": "frostmere", "text": "Travel to Frostmere"},
+        {"type": "travel", "node": "fish-hole", "text": "Fish at the north hole"},
+        {"type": "travel", "node": "frostmere", "text": "Deliver the catch"},
+        {"type": "dlg", "text": "Elder Sif worries about the unnatural frost"}
+      ],
+      "rewards": {"xp": 50, "gold": 25},
+      "lore": "The early freeze worries the elders.",
+      "unlocks": ["fm2", "fm3"],
+      "dialogue": [
+        {"speaker": "Elder Sif", "text": "The lake froze two months early. We need fish before our stores run out."},
+        {"speaker": "Elder Sif", "text": "Enough for a fortnight. But the early frost is not natural."}
+      ]
+    },
+    {
+      "id": "fm2",
+      "name": "The Frozen Shrine",
+      "type": "S",
+      "chapter": 0,
+      "description": "Something glows beneath the Frostmere ice.",
+      "levelReq": 3,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Elder Sif about the blue glow"},
+        {"type": "travel", "node": "frozen-shrine", "text": "Investigate the glow"},
+        {"type": "combat", "text": "Fight ice creatures", "enemy": "Bone Archer", "count": 3},
+        {"type": "dlg", "text": "A Wardstone shard is found frozen in the lake bed"}
+      ],
+      "rewards": {"xp": 80, "gold": 40},
+      "lore": "A Wardstone fragment frozen in the lake bed.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Elder Sif", "text": "Fishermen see a blue glow deep under the ice. It wasn't there before."},
+        {"speaker": "Elder Sif", "text": "A Wardstone shard, frozen for centuries. The thaw is releasing old magic."}
+      ]
+    },
+    {
+      "id": "fm3",
+      "name": "Northern Wolves",
+      "type": "B",
+      "chapter": 0,
+      "description": "A large wolf pack threatens Frostmere.",
+      "levelReq": 3,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Hunter Bjorn about the wolf pack"},
+        {"type": "travel", "node": "wolf-tracks", "text": "Track the pack"},
+        {"type": "combat", "text": "Thin the pack", "enemy": "Wolf", "count": 5},
+        {"type": "travel", "node": "frostmere", "text": "Claim bounty"},
+        {"type": "dlg", "text": "Hunter Bjorn wonders what drove the wolves south"}
+      ],
+      "rewards": {"xp": 70, "gold": 35},
+      "lore": "The pack was driven south by something worse.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Hunter Bjorn", "text": "Biggest pack I've ever seen. Thirty wolves, maybe more, all heading south."},
+        {"speaker": "Hunter Bjorn", "text": "They're fleeing something. Whatever drove them south, I don't want to meet it."}
+      ]
+    },
+    {
+      "id": "sk1",
+      "name": "Mountain Pass",
+      "type": "S",
+      "chapter": 0,
+      "description": "The pass to Stonekeep is blocked by rockfall.",
+      "levelReq": 5,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Warden Grohl about the blocked pass"},
+        {"type": "travel", "node": "stonekeep", "text": "Travel to Stonekeep"},
+        {"type": "combat", "text": "Clear pass creatures", "enemy": "Cave Troll", "count": 2},
+        {"type": "dlg", "text": "Warden Grohl thanks you for clearing the lifeline"}
+      ],
+      "rewards": {"xp": 150, "gold": 75},
+      "lore": "Stonekeep controls the only pass through the Ironpeaks.",
+      "unlocks": ["sk2", "sk3"],
+      "dialogue": [
+        {"speaker": "Warden Grohl", "text": "Rockfall blocked the east pass. Something's nesting in the rubble."},
+        {"speaker": "Warden Grohl", "text": "Pass is clear. Stonekeep thanks you — this route is our lifeline."}
+      ]
+    },
+    {
+      "id": "sk2",
+      "name": "The Deep Mine",
+      "type": "S",
+      "chapter": 0,
+      "description": "Strange noises from the abandoned mine.",
+      "levelReq": 6,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Warden Grohl about the mine noises"},
+        {"type": "travel", "node": "deep-mine", "text": "Enter the mine"},
+        {"type": "combat", "text": "Clear the mine", "enemy": "Cave Troll", "count": 3},
+        {"type": "dlg", "text": "Ancient dwarven tunnels discovered beneath"}
+      ],
+      "rewards": {"xp": 180, "gold": 90},
+      "lore": "The mine connects to ancient dwarven tunnels.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Warden Grohl", "text": "The old mine echoes with sounds. Miners won't go near it."},
+        {"speaker": "Warden Grohl", "text": "Ancient tunnels beneath. The dwarves built deeper than anyone knew."}
+      ]
+    },
+    {
+      "id": "sk3",
+      "name": "Supply Run",
+      "type": "G",
+      "chapter": 0,
+      "description": "Stonekeep needs supplies from Ironhaven.",
+      "levelReq": 5,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Warden Grohl about needed supplies"},
+        {"type": "travel", "node": "ironhaven", "text": "Collect from Ironhaven"},
+        {"type": "travel", "node": "stonekeep", "text": "Deliver to Stonekeep"},
+        {"type": "dlg", "text": "Stonekeep endures another season"}
+      ],
+      "rewards": {"xp": 120, "gold": 60},
+      "lore": "The mountain communities depend on each other.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Warden Grohl", "text": "We need iron and grain from Ironhaven. The road is dangerous alone."},
+        {"speaker": "Warden Grohl", "text": "Supplies received. Stonekeep endures another season."}
+      ]
+    },
+    {
+      "id": "dh1",
+      "name": "Water Crisis",
+      "type": "S",
+      "chapter": 0,
+      "description": "Dusthaven's well has dried up.",
+      "levelReq": 6,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Trader Mika about the water crisis"},
+        {"type": "travel", "node": "dusthaven", "text": "Travel to Dusthaven"},
+        {"type": "travel", "node": "water-source", "text": "Find new water source"},
+        {"type": "travel", "node": "dusthaven", "text": "Report back"},
+        {"type": "dlg", "text": "Dusthaven survives with the new spring"}
+      ],
+      "rewards": {"xp": 160, "gold": 80},
+      "lore": "The desert is expanding, swallowing the borderlands.",
+      "unlocks": ["dh2", "dh3"],
+      "dialogue": [
+        {"speaker": "Trader Mika", "text": "The well went dry last week. Without water, Dusthaven dies."},
+        {"speaker": "Trader Mika", "text": "An underground spring! We can dig a new well. Dusthaven survives."}
+      ]
+    },
+    {
+      "id": "dh2",
+      "name": "Sand Bandits",
+      "type": "B",
+      "chapter": 0,
+      "description": "Raiders attack caravans near Dusthaven.",
+      "levelReq": 7,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Trader Mika about the caravan raids"},
+        {"type": "travel", "node": "trade-route", "text": "Patrol the trade route"},
+        {"type": "combat", "text": "Defeat raiders", "enemy": "Bandit", "count": 5},
+        {"type": "combat", "text": "Defeat their leader", "enemy": "Dark Knight", "count": 1},
+        {"type": "dlg", "text": "The raiders were deserters from a forgotten army"}
+      ],
+      "rewards": {"xp": 220, "gold": 110},
+      "lore": "The raiders were deserters from a forgotten army.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Trader Mika", "text": "Three caravans lost this month. The raiders know every shortcut."},
+        {"speaker": "Trader Mika", "text": "Deserters from the old wars, still fighting for a kingdom that fell centuries ago."}
+      ]
+    },
+    {
+      "id": "dh3",
+      "name": "Desert Bloom",
+      "type": "G",
+      "chapter": 0,
+      "description": "A rare flower blooms once a decade in the deep desert.",
+      "levelReq": 6,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Herbalist Zora about the nightbloom"},
+        {"type": "travel", "node": "desert-dunes", "text": "Search the dunes"},
+        {"type": "travel", "node": "dusthaven", "text": "Deliver the bloom"},
+        {"type": "dlg", "text": "Herbalist Zora will save many lives"}
+      ],
+      "rewards": {"xp": 140, "gold": 70},
+      "lore": "The desert bloom can cure any poison.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Herbalist Zora", "text": "The nightbloom flowers only under a new moon. One grows in the eastern dunes."},
+        {"speaker": "Herbalist Zora", "text": "Magnificent! This single bloom will save many lives."}
+      ]
+    },
+    {
+      "id": "ac1",
+      "name": "Scavenger Hunt",
+      "type": "G",
+      "chapter": 0,
+      "description": "Ashfall Camp needs supplies from the wastes.",
+      "levelReq": 4,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Boss Kira about scavenging"},
+        {"type": "travel", "node": "ashfall-camp", "text": "Travel to Ashfall Camp"},
+        {"type": "travel", "node": "ashfall-ruins", "text": "Scavenge the ruins"},
+        {"type": "travel", "node": "ashfall-camp", "text": "Deliver salvage"},
+        {"type": "dlg", "text": "Boss Kira puts the salvage to good use"}
+      ],
+      "rewards": {"xp": 90, "gold": 45},
+      "lore": "The wastes hide treasures from a lost civilization.",
+      "unlocks": ["ac2", "ac3"],
+      "dialogue": [
+        {"speaker": "Boss Kira", "text": "The old ruins north of here are full of useful scrap. Bring what you find."},
+        {"speaker": "Boss Kira", "text": "Good haul! We can patch the walls and fix the water filters."}
+      ]
+    },
+    {
+      "id": "ac2",
+      "name": "Ashwalker",
+      "type": "B",
+      "chapter": 0,
+      "description": "A dangerous creature roams the Ashfall Wastes.",
+      "levelReq": 5,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Boss Kira about the ashwalker"},
+        {"type": "travel", "node": "ashwalker-trail", "text": "Track the ashwalker"},
+        {"type": "combat", "text": "Slay the ashwalker", "enemy": "Fire Elemental", "count": 1},
+        {"type": "travel", "node": "ashfall-camp", "text": "Claim bounty"},
+        {"type": "dlg", "text": "The wastes are safer now"}
+      ],
+      "rewards": {"xp": 160, "gold": 80},
+      "lore": "The ashwalker was a fire elemental corrupted by volcanic gases.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Boss Kira", "text": "Something stalks the ash fields. Burning footprints where it walks."},
+        {"speaker": "Boss Kira", "text": "A fire spirit gone mad. The wastes are a little safer now."}
+      ]
+    },
+    {
+      "id": "ac3",
+      "name": "Lost Expedition",
+      "type": "S",
+      "chapter": 0,
+      "description": "A mining expedition vanished in the wastes.",
+      "levelReq": 5,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Boss Kira about the missing miners"},
+        {"type": "travel", "node": "expedition-route", "text": "Search the expedition route"},
+        {"type": "combat", "text": "Fight scavengers", "enemy": "Bone Archer", "count": 3},
+        {"type": "travel", "node": "ashfall-camp", "text": "Return with findings"},
+        {"type": "dlg", "text": "Journals mention a sealed door with Wardstone markings"}
+      ],
+      "rewards": {"xp": 130, "gold": 65},
+      "lore": "The expedition found something they shouldn't have.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Boss Kira", "text": "Ten miners went east three weeks ago. None returned."},
+        {"speaker": "Boss Kira", "text": "Their journals mention a sealed door deep underground. Wardstone markings."}
+      ]
+    },
+    {
+      "id": "ls1",
+      "name": "Crystal Waters",
+      "type": "G",
+      "chapter": 0,
+      "description": "Lakeside needs crystal samples from the lake.",
+      "levelReq": 3,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Scholar Fen about the crystals"},
+        {"type": "travel", "node": "lakeside", "text": "Travel to Lakeside"},
+        {"type": "travel", "node": "crystal-shore", "text": "Gather crystals from the shore"},
+        {"type": "travel", "node": "lakeside", "text": "Deliver samples"},
+        {"type": "dlg", "text": "Scholar Fen detects Wardstone resonance"}
+      ],
+      "rewards": {"xp": 60, "gold": 30},
+      "lore": "The crystals contain trace Wardstone energy.",
+      "unlocks": ["ls2", "ls3"],
+      "dialogue": [
+        {"speaker": "Scholar Fen", "text": "Strange crystals wash ashore. I need samples to study their properties."},
+        {"speaker": "Scholar Fen", "text": "Wardstone resonance! The lake itself is imbued with ancient sealing magic."}
+      ]
+    },
+    {
+      "id": "ls2",
+      "name": "Lake Spirits",
+      "type": "S",
+      "chapter": 0,
+      "description": "Spirits rise from Crystal Lake at night.",
+      "levelReq": 4,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Scholar Fen about the lake spirits"},
+        {"type": "travel", "node": "lake-spirits", "text": "Investigate at the shore"},
+        {"type": "combat", "text": "Calm the spirits", "enemy": "Forest Spirit", "count": 3},
+        {"type": "dlg", "text": "The spirits guard a sunken Wardstone"}
+      ],
+      "rewards": {"xp": 100, "gold": 50},
+      "lore": "The spirits guard a sunken Wardstone.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Scholar Fen", "text": "The fishermen see lights on the water. Spirits, rising from the deep."},
+        {"speaker": "Scholar Fen", "text": "They guard what lies beneath — a Wardstone, whole and intact, at the lake bottom."}
+      ]
+    },
+    {
+      "id": "ls3",
+      "name": "Ferry Repair",
+      "type": "S",
+      "chapter": 0,
+      "description": "The Lakeside ferry needs materials.",
+      "levelReq": 3,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Ferryman Pike about the repairs"},
+        {"type": "travel", "node": "north-shore", "text": "Gather timber"},
+        {"type": "travel", "node": "lakeside", "text": "Deliver materials"},
+        {"type": "dlg", "text": "The south road is open again"}
+      ],
+      "rewards": {"xp": 55, "gold": 28},
+      "lore": "The ferry connects Lakeside to the southern settlements.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Ferryman Pike", "text": "My ferry is falling apart. I need good timber from the north shore."},
+        {"speaker": "Ferryman Pike", "text": "She'll float another decade now. The south road is open again."}
+      ]
+    },
+    {
+      "id": "dk1",
+      "name": "Border Watch",
+      "type": "S",
+      "chapter": 0,
+      "description": "Duskhollow guards the edge of the Shadowmere.",
+      "levelReq": 8,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Watcher Thane about the border patrol"},
+        {"type": "travel", "node": "duskhollow", "text": "Travel to Duskhollow"},
+        {"type": "combat", "text": "Patrol the border", "enemy": "Shadow Wraith", "count": 2},
+        {"type": "dlg", "text": "The wraiths grow bolder as the seal weakens"}
+      ],
+      "rewards": {"xp": 280, "gold": 140},
+      "lore": "Duskhollow exists to watch for signs of the Betrayer's return.",
+      "unlocks": ["dk2", "dk3"],
+      "dialogue": [
+        {"speaker": "Watcher Thane", "text": "We are the first line against the shadow. Help us patrol the border."},
+        {"speaker": "Watcher Thane", "text": "The wraiths grow bolder. The seal weakens with each passing year."}
+      ]
+    },
+    {
+      "id": "dk2",
+      "name": "Shadow Artifacts",
+      "type": "G",
+      "chapter": 0,
+      "description": "Recover cursed objects leaking from the Shadowmere.",
+      "levelReq": 9,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Watcher Thane about the dark objects"},
+        {"type": "travel", "node": "shadow-edge", "text": "Search the shadow edge"},
+        {"type": "combat", "text": "Defeat cursed guardians", "enemy": "Shadow Wraith", "count": 3},
+        {"type": "travel", "node": "duskhollow", "text": "Return artifacts"},
+        {"type": "dlg", "text": "Court regalia of the Betrayer King recovered"}
+      ],
+      "rewards": {"xp": 350, "gold": 175},
+      "lore": "The artifacts were tools of the Betrayer King's court.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Watcher Thane", "text": "Dark objects wash out of the Shadowmere. They corrupt everything they touch."},
+        {"speaker": "Watcher Thane", "text": "Court regalia of the Betrayer King himself. These belong in the Sanctum vault."}
+      ]
+    },
+    {
+      "id": "dk3",
+      "name": "The Thin Veil",
+      "type": "S",
+      "chapter": 0,
+      "description": "The boundary between realms is thinning.",
+      "levelReq": 10,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Watcher Thane about the tearing reality"},
+        {"type": "travel", "node": "shadow-veil", "text": "Investigate the veil"},
+        {"type": "combat", "text": "Seal the breach", "enemy": "Shadow Wraith", "count": 4},
+        {"type": "combat", "text": "Defeat veil guardian", "enemy": "Wraith Lord", "count": 1},
+        {"type": "dlg", "text": "The breach is sealed, but barely"}
+      ],
+      "rewards": {"xp": 450, "gold": 225},
+      "lore": "The veil between the mortal realm and the shadow grows thin.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Watcher Thane", "text": "Reality itself is tearing. I can see through to... somewhere else."},
+        {"speaker": "Watcher Thane", "text": "Sealed, but barely. The Betrayer King pushes harder every day."}
+      ]
+    },
+    {
+      "id": "cr1",
+      "name": "The Courier",
+      "type": "S",
+      "chapter": 0,
+      "description": "Deliver urgent messages across the realm.",
+      "levelReq": 3,
+      "steps": [
+        {"type": "dlg", "text": "Receive letters from Elder Thomas"},
+        {"type": "travel", "node": "thornwatch", "text": "Deliver to Thornwatch"},
+        {"type": "travel", "node": "briarwood", "text": "Deliver to Briarwood"},
+        {"type": "travel", "node": "willowbrook", "text": "Return to Willowbrook"},
+        {"type": "dlg", "text": "Settlements can now coordinate defenses"}
+      ],
+      "rewards": {"xp": 80, "gold": 40},
+      "lore": "Communication between settlements is vital.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Elder Thomas", "text": "These letters must reach Thornwatch and Briarwood before week's end."},
+        {"speaker": "Elder Thomas", "text": "Swift work! The settlements can coordinate their defenses now."}
+      ]
+    },
+    {
+      "id": "cr2",
+      "name": "Trade Route Survey",
+      "type": "G",
+      "chapter": 0,
+      "description": "Map the safest trade routes.",
+      "levelReq": 4,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Merchant Caelen about mapping routes"},
+        {"type": "travel", "node": "willowbrook", "text": "Start at Willowbrook"},
+        {"type": "travel", "node": "lakeside", "text": "Survey Lakeside route"},
+        {"type": "travel", "node": "mistport", "text": "Survey Mistport route"},
+        {"type": "travel", "node": "willowbrook", "text": "Compile the map"},
+        {"type": "dlg", "text": "Trade will flourish with the new map"}
+      ],
+      "rewards": {"xp": 100, "gold": 50},
+      "lore": "Safe trade routes strengthen every settlement.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Merchant Caelen", "text": "I need someone to walk the routes and mark the safe passages."},
+        {"speaker": "Merchant Caelen", "text": "With this map, merchants can avoid the worst dangers. Trade will flourish."}
+      ]
+    },
+    {
+      "id": "cr3",
+      "name": "The Grand Tour",
+      "type": "S",
+      "chapter": 0,
+      "description": "Visit every settlement in the realm.",
+      "levelReq": 8,
+      "steps": [
+        {"type": "dlg", "text": "Elder Thomas encourages you to see the whole realm"},
+        {"type": "travel", "node": "thornwatch", "text": "Visit Thornwatch"},
+        {"type": "travel", "node": "frostmere", "text": "Visit Frostmere"},
+        {"type": "travel", "node": "briarwood", "text": "Visit Briarwood"},
+        {"type": "travel", "node": "eldergrove", "text": "Visit Eldergrove"},
+        {"type": "travel", "node": "stonekeep", "text": "Visit Stonekeep"},
+        {"type": "travel", "node": "ashfall-camp", "text": "Visit Ashfall Camp"},
+        {"type": "travel", "node": "cinderhold", "text": "Visit Cinderhold"},
+        {"type": "travel", "node": "dusthaven", "text": "Visit Dusthaven"},
+        {"type": "travel", "node": "sunspire", "text": "Visit Sunspire"},
+        {"type": "travel", "node": "ironhaven", "text": "Visit Ironhaven"},
+        {"type": "travel", "node": "lakeside", "text": "Visit Lakeside"},
+        {"type": "travel", "node": "mistport", "text": "Visit Mistport"},
+        {"type": "travel", "node": "duskhollow", "text": "Visit Duskhollow"},
+        {"type": "travel", "node": "shadowmere-sanctum", "text": "Visit the Sanctum"},
+        {"type": "travel", "node": "willowbrook", "text": "Return home"},
+        {"type": "dlg", "text": "The realm knows its Warden"}
+      ],
+      "rewards": {"xp": 600, "gold": 300},
+      "lore": "You have walked every road in the realm.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Elder Thomas", "text": "A true hero knows every corner of the land they protect."},
+        {"speaker": "Elder Thomas", "text": "You have seen it all. Every village, every frontier. The realm knows its Warden."}
+      ]
+    },
+    {
+      "id": "cr4",
+      "name": "Mountain to Sea",
+      "type": "S",
+      "chapter": 0,
+      "description": "Escort goods from Cinderhold to Mistport.",
+      "levelReq": 6,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Master Smith Durin about the shipment"},
+        {"type": "travel", "node": "cinderhold", "text": "Collect from Cinderhold"},
+        {"type": "combat", "text": "Fight highway bandits", "enemy": "Bandit", "count": 4},
+        {"type": "travel", "node": "ironhaven", "text": "Pass through Ironhaven"},
+        {"type": "travel", "node": "mistport", "text": "Deliver to Mistport"},
+        {"type": "dlg", "text": "Harbormaster Voss receives the starfall steel"}
+      ],
+      "rewards": {"xp": 200, "gold": 100},
+      "lore": "The longest trade route in the realm.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Master Smith Durin", "text": "Mistport ordered a shipment of starfall steel. It needs a strong escort."},
+        {"speaker": "Harbormaster Voss", "text": "Starfall steel! This is worth more than gold. Mistport thanks you."}
+      ]
+    },
+    {
+      "id": "cr5",
+      "name": "Healer's Circuit",
+      "type": "G",
+      "chapter": 0,
+      "description": "Deliver medicine to remote settlements.",
+      "levelReq": 5,
+      "steps": [
+        {"type": "dlg", "text": "Speak with Healer Mira about the frontier towns"},
+        {"type": "travel", "node": "frostmere", "text": "Deliver to Frostmere"},
+        {"type": "travel", "node": "ashfall-camp", "text": "Deliver to Ashfall Camp"},
+        {"type": "travel", "node": "duskhollow", "text": "Deliver to Duskhollow"},
+        {"type": "travel", "node": "willowbrook", "text": "Return to Willowbrook"},
+        {"type": "dlg", "text": "Every life saved is a victory"}
+      ],
+      "rewards": {"xp": 160, "gold": 80},
+      "lore": "Even the most remote settlements deserve care.",
+      "unlocks": [],
+      "dialogue": [
+        {"speaker": "Healer Mira", "text": "These medicines must reach the frontier towns. Many are sick."},
+        {"speaker": "Healer Mira", "text": "Every life saved is a victory. Thank you for walking so far."}
+      ]
+    }
+  ]
+}

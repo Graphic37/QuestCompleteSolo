@@ -550,29 +550,6 @@ const ET=[
   {n:'Wraith Lord',hp:220,a:30,xp:160,g:100,c:'#2020a0',s:18},
   {n:'Dragon Whelp',hp:300,a:35,xp:200,g:130,c:'#900040',s:22}
 ];
-const RD=[
-  [[0,2600],[900,2600],[1600,2300],[2400,1800],[3000,800]],
-  [[900,2600],[900,1900],[700,1200]],
-  [[3000,800],[3800,1200],[4400,1200],[5000,1200]],
-  [[900,2600],[1300,3100],[900,3900]],
-  [[3000,800],[3200,1700],[3400,2800]],
-  [[3400,2800],[4200,2900],[5000,3300],[5400,3600]],
-  [[3400,2800],[3400,3700],[3400,4400]],
-  [[900,3900],[2000,4100],[3000,4200],[3400,4400]],
-  [[5000,1200],[5200,2100],[5400,3600]],
-  // New roads to new towns
-  [[700,1200],[1200,600]], // to Frostmere
-  [[900,2600],[1800,1600]], // to Briarwood
-  [[1800,1600],[2400,1800]], // Briarwood to forest road
-  [[3000,2200],[3400,2800]], // Stonekeep to Ironhaven
-  [[3000,800],[3000,2200]], // Eldergrove to Stonekeep
-  [[4600,2200],[5000,1200]], // Dusthaven to Cinderhold
-  [[4600,2200],[5400,3600]], // Dusthaven to Sunspire
-  [[900,3900],[1600,3200]], // Mistport to Lakeside
-  [[4800,600],[5000,1200]], // Ashfall to Cinderhold
-  [[2800,4800],[3400,4400]], // Duskhollow to Sanctum
-];
-
 // ═══ QUESTS ═══
 function Q(id,n,tp,ch,ds,lr,st,rw,lore,ul,dlg){return{id,n,tp,ch,ds,lr,st,rw:{e:rw[0],g:rw[1]},lore,ul:ul||[],dlg:dlg||[]};}
 function S(t,x,y,tx,en,ct){return{t,x,y,tx,en,ct};}
@@ -799,6 +776,172 @@ function loadTile(col,row){
   img.src=getTilePath(col,row);
 }
 
+// ═══ COLLISION MAP & A* PATHFINDING ═══
+const CMAP_SCALE = 16; // 1 collision pixel = 16 world pixels
+const CMAP_W = Math.ceil(WW / CMAP_SCALE); // 1024
+const CMAP_H = Math.ceil(WH / CMAP_SCALE); // 768
+let collisionGrid = null;
+let cmapReady = false;
+
+(function loadCollisionMap() {
+  const img = new Image();
+  img.onload = function() {
+    const c = document.createElement('canvas');
+    c.width = CMAP_W; c.height = CMAP_H;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0, CMAP_W, CMAP_H);
+    const data = ctx.getImageData(0, 0, CMAP_W, CMAP_H).data;
+    collisionGrid = new Uint8Array(CMAP_W * CMAP_H);
+    for (let i = 0; i < CMAP_W * CMAP_H; i++) {
+      collisionGrid[i] = data[i * 4 + 3] >= 128 ? 1 : 0; // alpha >= 128 = blocked
+    }
+    cmapReady = true;
+  };
+  img.onerror = function() { console.warn('No collision map found, using straight-line movement'); };
+  img.src = 'assets/maps/cmap/cmap.png';
+})();
+
+function worldToGrid(wx, wy) {
+  return { gx: Math.floor(wx / CMAP_SCALE), gy: Math.floor(wy / CMAP_SCALE) };
+}
+function gridToWorld(gx, gy) {
+  return { x: gx * CMAP_SCALE + CMAP_SCALE / 2, y: gy * CMAP_SCALE + CMAP_SCALE / 2 };
+}
+function isWalkable(gx, gy) {
+  if (gx < 0 || gx >= CMAP_W || gy < 0 || gy >= CMAP_H) return false;
+  return collisionGrid[gy * CMAP_W + gx] === 0;
+}
+
+function findPath(startX, startY, endX, endY) {
+  if (!cmapReady || !collisionGrid) return null;
+
+  const sg = worldToGrid(startX, startY);
+  const eg = worldToGrid(endX, endY);
+
+  // Clamp to grid bounds
+  sg.gx = Math.max(0, Math.min(CMAP_W - 1, sg.gx));
+  sg.gy = Math.max(0, Math.min(CMAP_H - 1, sg.gy));
+  eg.gx = Math.max(0, Math.min(CMAP_W - 1, eg.gx));
+  eg.gy = Math.max(0, Math.min(CMAP_H - 1, eg.gy));
+
+  // If start or end is blocked, find nearest walkable cell
+  if (!isWalkable(sg.gx, sg.gy)) {
+    const ns = nearestWalkable(sg.gx, sg.gy);
+    if (!ns) return null;
+    sg.gx = ns.gx; sg.gy = ns.gy;
+  }
+  if (!isWalkable(eg.gx, eg.gy)) {
+    const ne = nearestWalkable(eg.gx, eg.gy);
+    if (!ne) return null;
+    eg.gx = ne.gx; eg.gy = ne.gy;
+  }
+
+  // A* implementation
+  const key = (gx, gy) => gy * CMAP_W + gx;
+  const h = (gx, gy) => Math.abs(gx - eg.gx) + Math.abs(gy - eg.gy);
+
+  const open = new Map(); // key -> {gx, gy, g, f, parent}
+  const closed = new Set();
+
+  const startKey = key(sg.gx, sg.gy);
+  const startH = h(sg.gx, sg.gy);
+  open.set(startKey, { gx: sg.gx, gy: sg.gy, g: 0, f: startH, parent: null });
+
+  // Use a simple sorted insertion for the open list (sufficient for this grid size)
+  const dirs = [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[-1,1],[1,-1],[1,1]];
+  const dirCosts = [1,1,1,1,1.414,1.414,1.414,1.414];
+
+  let iterations = 0;
+  const MAX_ITERATIONS = 50000;
+
+  while (open.size > 0 && iterations < MAX_ITERATIONS) {
+    iterations++;
+
+    // Find node with lowest f
+    let bestKey = null, bestF = Infinity;
+    for (const [k, node] of open) {
+      if (node.f < bestF) { bestF = node.f; bestKey = k; }
+    }
+
+    const current = open.get(bestKey);
+    open.delete(bestKey);
+    closed.add(bestKey);
+
+    // Goal reached?
+    if (current.gx === eg.gx && current.gy === eg.gy) {
+      // Reconstruct path
+      const gridPath = [];
+      let node = current;
+      while (node) {
+        gridPath.unshift({ gx: node.gx, gy: node.gy });
+        node = node.parent;
+      }
+      // Convert to world coords and simplify
+      return simplifyPath(gridPath.map(p => gridToWorld(p.gx, p.gy)));
+    }
+
+    // Explore neighbors
+    for (let d = 0; d < 8; d++) {
+      const ngx = current.gx + dirs[d][0];
+      const ngy = current.gy + dirs[d][1];
+      const nk = key(ngx, ngy);
+
+      if (closed.has(nk)) continue;
+      if (!isWalkable(ngx, ngy)) continue;
+
+      // For diagonal movement, check that both adjacent cells are walkable
+      if (d >= 4) {
+        if (!isWalkable(current.gx + dirs[d][0], current.gy) ||
+            !isWalkable(current.gx, current.gy + dirs[d][1])) continue;
+      }
+
+      const ng = current.g + dirCosts[d];
+      const existing = open.get(nk);
+
+      if (!existing || ng < existing.g) {
+        open.set(nk, { gx: ngx, gy: ngy, g: ng, f: ng + h(ngx, ngy), parent: current });
+      }
+    }
+  }
+
+  return null; // No path found
+}
+
+function nearestWalkable(gx, gy) {
+  for (let r = 1; r < 20; r++) {
+    for (let dx = -r; dx <= r; dx++) {
+      for (let dy = -r; dy <= r; dy++) {
+        if (Math.abs(dx) !== r && Math.abs(dy) !== r) continue;
+        if (isWalkable(gx + dx, gy + dy)) return { gx: gx + dx, gy: gy + dy };
+      }
+    }
+  }
+  return null;
+}
+
+function simplifyPath(path) {
+  if (path.length <= 2) return path;
+  // Remove intermediate points that are on the same line
+  const result = [path[0]];
+  for (let i = 1; i < path.length - 1; i++) {
+    const prev = result[result.length - 1];
+    const curr = path[i];
+    const next = path[i + 1];
+    const dx1 = curr.x - prev.x, dy1 = curr.y - prev.y;
+    const dx2 = next.x - curr.x, dy2 = next.y - curr.y;
+    // If direction changes, keep this point
+    if (Math.abs(dx1 * dy2 - dy1 * dx2) > 0.01) {
+      result.push(curr);
+    }
+  }
+  result.push(path[path.length - 1]);
+  return result;
+}
+
+// Current path being followed
+let currentPath = null;
+let pathIndex = 0;
+
 function setQuality(idx){
   if(idx===currentQuality)return;
   currentQuality=idx;
@@ -948,7 +1091,7 @@ function drawW(){
       // Animated flowing dashed line toward target
       let dashOff=gt*40; // animate dash flow
       X.strokeStyle='rgba(212,168,67,.18)';X.setLineDash([10,8]);X.lineDashOffset=-dashOff;X.lineWidth=1.5;
-      X.beginPath();X.moveTo(P.x,P.y);X.lineTo(P.tx,P.ty);X.stroke();X.setLineDash([]);X.lineDashOffset=0;
+      if(currentPath&&currentPath.length>1){X.beginPath();X.moveTo(P.x,P.y);for(let wp of currentPath.slice(pathIndex)){X.lineTo(wp.x,wp.y);}X.stroke();}else{X.beginPath();X.moveTo(P.x,P.y);X.lineTo(P.tx,P.ty);X.stroke();}X.setLineDash([]);X.lineDashOffset=0;
 
       // Pulsing ring at destination
       if(!cT){
@@ -1038,9 +1181,6 @@ function drawMM(){
   if(minimapImg.complete&&minimapImg.naturalWidth>0){MX.drawImage(minimapImg,0,0,mw,mh);}
   // Fog on minimap
   MX.drawImage(fogC,0,0,FW,FH,0,0,mw,mh);
-  // Roads (over fog slightly visible as explored paths)
-  MX.strokeStyle='rgba(200,180,140,.1)';MX.lineWidth=1;
-  for(let r of RD){MX.beginPath();MX.moveTo(r[0][0]*sx,r[0][1]*sy);for(let i=1;i<r.length;i++)MX.lineTo(r[i][0]*sx,r[i][1]*sy);MX.stroke();}
   // Towns — small labeled dots
   for(let t of TWN){
     if(!t.v)continue;
@@ -1055,7 +1195,7 @@ function drawMM(){
   if(P.tx&&(aQ||grinding)){
     // Line
     MX.strokeStyle='rgba(212,168,67,.3)';MX.lineWidth=1;MX.setLineDash([2,2]);
-    MX.beginPath();MX.moveTo(P.x*sx,P.y*sy);MX.lineTo(P.tx*sx,P.ty*sy);MX.stroke();MX.setLineDash([]);
+    if(currentPath&&currentPath.length>1){MX.beginPath();MX.moveTo(P.x*sx,P.y*sy);for(let wp of currentPath.slice(pathIndex)){MX.lineTo(wp.x*sx,wp.y*sy);}MX.stroke();}else{MX.beginPath();MX.moveTo(P.x*sx,P.y*sy);MX.lineTo(P.tx*sx,P.ty*sy);MX.stroke();}MX.setLineDash([]);
     // Pulsing target ring
     let pr=3+Math.sin(gt*3)*1.5;
     MX.strokeStyle='rgba(212,168,67,.5)';MX.lineWidth=1;
@@ -1261,9 +1401,9 @@ function updateDlg(dt){if(!dlgOn)return;let cps=30*P.dlgSpd;dlgTm+=dt*cps;let tg
 
 // ═══ QUESTS ═══
 function startQst(id){if(aQ)return;let q=QS.find(qq=>qq.id===id);if(!q||doneQ.has(q.id))return;if(q.lr>P.lv){lg('Need level '+q.lr,'sy');return;}grinding=false;grindLv=null;aQ=q;sI=0;cK=0;cT=null;dlgI=0;ens=ens.filter(e=>e.dead);lg('Quest: '+q.n,'qt');beginStep();renderP();}
-function beginStep(){if(!aQ)return;let s=aQ.st[sI];if(!s){compQ();return;}if(s.t==='dlg'){let d=aQ.dlg[dlgI];if(d){startDlg(d.w,d.t);dlgI++;}else advStep();}else if(s.t==='travel'||s.t==='discover'){lg(s.tx,'tv');let tx=s.x,ty=s.y;P.tx=tx||P.x;P.ty=ty||P.y;if(P.autoQ)P.mv=true;cT=null;}else if(s.t==='combat'){lg(s.tx,'tv');cN=s.ct;cK=0;for(let i=0;i<s.ct;i++)spawn(s.en,P.x,P.y);P.mv=false;cT=null;findEn();}}
+function beginStep(){if(!aQ)return;let s=aQ.st[sI];if(!s){compQ();return;}if(s.t==='dlg'){let d=aQ.dlg[dlgI];if(d){startDlg(d.w,d.t);dlgI++;}else advStep();}else if(s.t==='travel'||s.t==='discover'){lg(s.tx,'tv');let tx=s.x,ty=s.y;P.tx=tx||P.x;P.ty=ty||P.y;currentPath=null;pathIndex=0;if(P.autoQ)P.mv=true;cT=null;}else if(s.t==='combat'){lg(s.tx,'tv');cN=s.ct;cK=0;for(let i=0;i<s.ct;i++)spawn(s.en,P.x,P.y);P.mv=false;cT=null;findEn();}}
 function advStep(){if(!aQ)return;let s=aQ.st[sI];if(s&&s.t==='discover'&&s.en){let tw=TWN.find(t=>t.n===s.en);if(tw&&!tw.v){tw.v=true;lg('Discovered '+tw.n,'qt');nf(tw.n,tw.d,'tw');pt(tw.x,tw.y,'#d4a843',14);}}sI++;if(sI>=aQ.st.length)compQ();else beginStep();renderP();}
-function findEn(){let a=ens.filter(e=>!e.dead);if(!a.length){cT=null;P.mv=false;return;}let n=a.reduce((a,b)=>dst(P,a)<dst(P,b)?a:b);cT=n;P.tx=n.x;P.ty=n.y;if(P.autoQ)P.mv=true;}
+function findEn(){let a=ens.filter(e=>!e.dead);if(!a.length){cT=null;P.mv=false;return;}let n=a.reduce((a,b)=>dst(P,a)<dst(P,b)?a:b);cT=n;P.tx=n.x;P.ty=n.y;currentPath=null;pathIndex=0;if(P.autoQ)P.mv=true;}
 function compQ(){
   if(!aQ)return;let q=aQ;doneQ.add(q.id);P.qd++;
   // Lucky Coin — stacking +1% rewards per quest completed
@@ -1363,7 +1503,7 @@ function drawFMap(){
   // Quest target
   if(P.tx&&(aQ||grinding)){
     fx.strokeStyle='rgba(212,168,67,.35)';fx.setLineDash([10,8]);fx.lineWidth=2.5;
-    fx.beginPath();fx.moveTo(P.x,P.y);fx.lineTo(P.tx,P.ty);fx.stroke();fx.setLineDash([]);
+    if(currentPath&&currentPath.length>1){fx.beginPath();fx.moveTo(P.x,P.y);for(let wp of currentPath.slice(pathIndex)){fx.lineTo(wp.x,wp.y);}fx.stroke();}else{fx.beginPath();fx.moveTo(P.x,P.y);fx.lineTo(P.tx,P.ty);fx.stroke();}fx.setLineDash([]);
     fx.fillStyle='rgba(212,168,67,.4)';fx.beginPath();fx.arc(P.tx,P.ty,12,0,Math.PI*2);fx.fill();
   }
   // Player
@@ -1385,19 +1525,55 @@ function getIn(){
 function moveP(dt){
   let inp=getIn(),man=inp.dx||inp.dy,speed=60*P.moveSpd*dt;
   if(man){
-    P.x+=inp.dx*speed;P.y+=inp.dy*speed;
-    P.x=Math.max(20,Math.min(WW-20,P.x));P.y=Math.max(20,Math.min(WH-20,P.y));
+    // Manual WASD movement with collision checking
+    let nx=P.x+inp.dx*speed, ny=P.y+inp.dy*speed;
+    nx=Math.max(20,Math.min(WW-20,nx));ny=Math.max(20,Math.min(WH-20,ny));
+    if(cmapReady){
+      const g=worldToGrid(nx,ny);
+      if(isWalkable(g.gx,g.gy)){P.x=nx;P.y=ny;}
+      else{
+        // Try sliding along axes
+        const gx=worldToGrid(nx,P.y);
+        const gy=worldToGrid(P.x,ny);
+        if(isWalkable(gx.gx,gx.gy))P.x=nx;
+        else if(isWalkable(gy.gx,gy.gy))P.y=ny;
+      }
+    } else {P.x=nx;P.y=ny;}
     P.ang=Math.atan2(inp.dy,inp.dx)+Math.PI/2;
     if(aQ&&P.tx){let s=aQ.st[sI];if(s&&(s.t==='travel'||s.t==='discover')&&Math.hypot(P.tx-P.x,P.ty-P.y)<45)advStep();}
     if(cT&&!cT.dead){P.tx=cT.x;P.ty=cT.y;}
+    currentPath=null; // Clear auto-path when manually moving
   } else if(P.autoQ&&P.mv&&P.tx){
+    // A* pathfinding auto-navigation
     let dx=P.tx-P.x,dy=P.ty-P.y,d=Math.hypot(dx,dy);
-    if(d<8){P.mv=false;if(aQ){let s=aQ.st[sI];if(s&&(s.t==='travel'||s.t==='discover'))advStep();}return;}
-    let autoSpeed=speed*1.3;
-    let mv=Math.min(autoSpeed,d);
-    P.x+=dx/d*mv;P.y+=dy/d*mv;
+    if(d<8){P.mv=false;currentPath=null;pathIndex=0;if(aQ){let s=aQ.st[sI];if(s&&(s.t==='travel'||s.t==='discover'))advStep();}return;}
+
+    // Compute path if needed
+    if(!currentPath||currentPath.length===0){
+      currentPath=findPath(P.x,P.y,P.tx,P.ty);
+      pathIndex=0;
+      if(!currentPath){
+        // Fallback to straight line if no path found
+        let autoSpeed=speed*1.3,mv=Math.min(autoSpeed,d);
+        P.x+=dx/d*mv;P.y+=dy/d*mv;
+        P.ang=Math.atan2(dy,dx)+Math.PI/2;
+        return;
+      }
+    }
+
+    // Follow the path
+    if(pathIndex<currentPath.length){
+      let wp=currentPath[pathIndex];
+      let wdx=wp.x-P.x,wdy=wp.y-P.y,wd=Math.hypot(wdx,wdy);
+      if(wd<12){pathIndex++;return;}
+      let autoSpeed=speed*1.3,mv=Math.min(autoSpeed,wd);
+      P.x+=wdx/wd*mv;P.y+=wdy/wd*mv;
+      P.ang=Math.atan2(wdy,wdx)+Math.PI/2;
+    } else {
+      // Reached end of path
+      currentPath=null;pathIndex=0;
+    }
     P.x=Math.max(20,Math.min(WW-20,P.x));P.y=Math.max(20,Math.min(WH-20,P.y));
-    P.ang=Math.atan2(dy,dx)+Math.PI/2;
   }
 }
 

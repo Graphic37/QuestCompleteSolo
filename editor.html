@@ -74,7 +74,8 @@ body{background:var(--bg);color:var(--tx);font-family:var(--fn);overflow:hidden;
 
 /* MODAL */
 #modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);transition:opacity .15s;}
-#modal.h{opacity:0;pointer-events:none;}
+#modal.h,.h-modal{opacity:0;pointer-events:none;}
+#import-modal.h{opacity:0;pointer-events:none;}
 .modal-box{background:#12121a;border:1px solid var(--bd);border-radius:10px;width:700px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 16px 50px rgba(0,0,0,.5);}
 .modal-top{padding:14px 20px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;}
 .modal-title{font-size:16px;font-weight:700;color:var(--gd);}
@@ -105,7 +106,6 @@ body{background:var(--bg);color:var(--tx);font-family:var(--fn);overflow:hidden;
   <div class="tool-group">
     <button class="tool-btn on" data-mode="select" onclick="setMode('select')">Select</button>
     <button class="tool-btn" data-mode="town" onclick="setMode('town')">+ Town</button>
-    <button class="tool-btn" data-mode="road" onclick="setMode('road')">+ Road</button>
     <button class="tool-btn" data-mode="quest" onclick="setMode('quest')">+ Quest Pt</button>
   </div>
 
@@ -114,16 +114,18 @@ body{background:var(--bg);color:var(--tx);font-family:var(--fn);overflow:hidden;
   <div class="tool-group">
     <button class="tool-btn on" data-layer="tiles" onclick="toggleLayer('tiles')">Map</button>
     <button class="tool-btn on" data-layer="biomes" onclick="toggleLayer('biomes')">Biomes</button>
-    <button class="tool-btn on" data-layer="roads" onclick="toggleLayer('roads')">Roads</button>
     <button class="tool-btn on" data-layer="towns" onclick="toggleLayer('towns')">Towns</button>
     <button class="tool-btn on" data-layer="quests" onclick="toggleLayer('quests')">Quests</button>
+    <button class="tool-btn on" data-layer="nodes" onclick="toggleLayer('nodes')">Nodes</button>
     <button class="tool-btn" data-layer="grid" onclick="toggleLayer('grid')">Grid</button>
     <button class="tool-btn on" data-layer="enemies" onclick="toggleLayer('enemies')">Enemies</button>
+    <button class="tool-btn" data-layer="cmap" onclick="toggleLayer('cmap')">Collision</button>
   </div>
 
   <div class="tool-sep"></div>
   <div class="tool-group">
     <button class="tool-btn" onclick="fitView()">Fit</button>
+    <button class="tool-btn" style="color:var(--bl)" onclick="openImportQuest()">Import Quest</button>
     <button class="tool-btn export" onclick="doExport()">Export</button>
     <button class="tool-btn" onclick="toggleSide()">Panel</button>
   </div>
@@ -186,6 +188,23 @@ body{background:var(--bg);color:var(--tx);font-family:var(--fn);overflow:hidden;
   </div>
 </div>
 
+<!-- IMPORT QUEST MODAL -->
+<div id="import-modal" class="h" style="position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);transition:opacity .15s;">
+  <div class="modal-box">
+    <div class="modal-top">
+      <div class="modal-title">Import Quest JSON</div>
+      <button class="tool-btn" onclick="closeImportModal()">Close</button>
+    </div>
+    <div class="modal-body">
+      <p>Paste quest JSON from Claude. New nodes will be placed at placeholder positions — drag them to the correct locations on the map.</p>
+      <textarea id="importArea" placeholder='Paste quest JSON here...'></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="tool-btn" style="color:var(--bl)" onclick="doImportQuest()">Import Quest</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════════════════════════
 // WORLD CONSTANTS (matching index.html exactly)
@@ -240,22 +259,6 @@ const TWN=[
   {n:'Duskhollow',x:2800,y:4800,d:'Remote outpost near the Shadowmere.',v:false,r:40}
 ];
 
-const RD=[
-  [[0,2600],[900,2600],[1600,2300],[2400,1800],[3000,800]],
-  [[900,2600],[900,1900],[700,1200]],
-  [[3000,800],[3800,1200],[4400,1200],[5000,1200]],
-  [[900,2600],[1300,3100],[900,3900]],
-  [[3000,800],[3200,1700],[3400,2800]],
-  [[3400,2800],[4200,2900],[5000,3300],[5400,3600]],
-  [[3400,2800],[3400,3700],[3400,4400]],
-  [[900,3900],[2000,4100],[3000,4200],[3400,4400]],
-  [[5000,1200],[5200,2100],[5400,3600]],
-  [[700,1200],[1200,600]],[[900,2600],[1800,1600]],
-  [[1800,1600],[2400,1800]],[[3000,2200],[3400,2800]],
-  [[3000,800],[3000,2200]],[[4600,2200],[5000,1200]],
-  [[4600,2200],[5400,3600]],[[900,3900],[1600,3200]],
-  [[4800,600],[5000,1200]],[[2800,4800],[3400,4400]]
-];
 
 const ET=[
   {n:'Slime',hp:12,a:2,xp:10,g:6,c:'#50c050',s:8},
@@ -315,18 +318,55 @@ const QS=[
 const QUEST_COLORS={M:'#e0e0e0',S:'#5080b0',B:'#c04040',G:'#5a9a4a'};
 const QUEST_LABELS={M:'Main',S:'Side',B:'Bounty',G:'Gather'};
 
+// Node data (loaded from data/nodes.json)
+let NODES = [];
+let QUESTS_DATA = [];
+
+// Load external data
+async function loadExternalData() {
+  try {
+    const nodesResp = await fetch('data/nodes.json');
+    if (nodesResp.ok) {
+      const nodesData = await nodesResp.json();
+      NODES = nodesData.nodes || [];
+    }
+  } catch(e) { console.warn('Could not load nodes.json:', e); }
+  try {
+    const questsResp = await fetch('data/quests.json');
+    if (questsResp.ok) {
+      const questsData = await questsResp.json();
+      QUESTS_DATA = questsData.quests || [];
+    }
+  } catch(e) { console.warn('Could not load quests.json:', e); }
+  render();
+  updateSidePanel();
+}
+
 // ═══════════════════════════════════════════════════════════
 // EDITOR STATE
 // ═══════════════════════════════════════════════════════════
 let mode='select';
-let layers={tiles:true,biomes:true,roads:true,towns:true,quests:true,grid:false,enemies:true};
+let layers={tiles:true,biomes:true,towns:true,quests:true,grid:false,enemies:true,cmap:false,nodes:true};
 let panX=0, panY=0, zoom=0.08; // start zoomed to fit
 let panning=false, spaceDown=false, lastPan={x:0,y:0};
-let selected=null; // {type:'town'|'quest'|'road'|'enemy', idx:number}
+let selected=null; // {type:'town'|'quest'|'enemy', idx:number}
 let hovered=null;
 let sideTab='world';
 let dragging=null; // for moving entities
-let roadBuilding=null; // array of points being built
+
+// ═══════════════════════════════════════════════════════════
+// COLLISION MAP
+// ═══════════════════════════════════════════════════════════
+let cmapImg = null;
+let cmapLoading = false;
+function loadCmap() {
+  if (cmapImg || cmapLoading) return;
+  cmapLoading = true;
+  const img = new Image();
+  img.onload = function() { cmapImg = img; cmapLoading = false; render(); };
+  img.onerror = function() { cmapLoading = false; console.warn('No collision map found at assets/maps/cmap/cmap.png'); };
+  img.src = 'assets/maps/cmap/cmap.png';
+}
 
 // ═══════════════════════════════════════════════════════════
 // CANVAS SETUP
@@ -465,6 +505,18 @@ function _render(){
     document.getElementById('bb-tiles').textContent=visible+'/'+tilesLoaded+' tiles';
   }
 
+  // ── COLLISION MAP LAYER ──
+  if(layers.cmap){
+    if(!cmapImg)loadCmap();
+    if(cmapImg){
+      ovX.globalAlpha=0.5;
+      const p1=worldToScreen(-TILE_OFFSET_X,-TILE_OFFSET_Y);
+      const p2=worldToScreen(WW-TILE_OFFSET_X,WH-TILE_OFFSET_Y);
+      ovX.drawImage(cmapImg,p1.x,p1.y,p2.x-p1.x,p2.y-p1.y);
+      ovX.globalAlpha=1;
+    }
+  }
+
   // ── GRID LAYER ──
   if(layers.grid){
     ovX.strokeStyle='rgba(255,255,255,.06)';
@@ -501,51 +553,12 @@ function _render(){
     ovX.fillText('Content Area (6400x5200)',cbTL.x+4,cbTL.y+4);
   }
 
-  // ── ROAD LAYER ──
-  if(layers.roads){
-    for(let ri=0;ri<RD.length;ri++){
-      const rd=RD[ri];
-      const isSel=selected&&selected.type==='road'&&selected.idx===ri;
-      ovX.strokeStyle=isSel?'rgba(200,180,140,.8)':'rgba(200,180,140,.35)';
-      ovX.lineWidth=isSel?3:2;
-      ovX.lineCap='round';ovX.lineJoin='round';
-      ovX.beginPath();
-      for(let i=0;i<rd.length;i++){
-        const p=worldToScreen(rd[i][0],rd[i][1]);
-        if(i===0)ovX.moveTo(p.x,p.y);else ovX.lineTo(p.x,p.y);
-      }
-      ovX.stroke();
-      // Waypoints
-      if(zoom>0.04){
-        for(let i=0;i<rd.length;i++){
-          const p=worldToScreen(rd[i][0],rd[i][1]);
-          ovX.fillStyle=isSel?'rgba(200,180,140,.7)':'rgba(200,180,140,.3)';
-          ovX.beginPath();ovX.arc(p.x,p.y,3,0,Math.PI*2);ovX.fill();
-        }
-      }
-    }
-    // Road being built
-    if(roadBuilding&&roadBuilding.length>0){
-      ovX.strokeStyle='rgba(212,168,67,.7)';ovX.lineWidth=2;ovX.setLineDash([4,4]);
-      ovX.beginPath();
-      for(let i=0;i<roadBuilding.length;i++){
-        const p=worldToScreen(roadBuilding[i][0],roadBuilding[i][1]);
-        if(i===0)ovX.moveTo(p.x,p.y);else ovX.lineTo(p.x,p.y);
-      }
-      ovX.stroke();ovX.setLineDash([]);
-      for(let i=0;i<roadBuilding.length;i++){
-        const p=worldToScreen(roadBuilding[i][0],roadBuilding[i][1]);
-        ovX.fillStyle='rgba(212,168,67,.8)';
-        ovX.beginPath();ovX.arc(p.x,p.y,4,0,Math.PI*2);ovX.fill();
-      }
-    }
-  }
-
   // ── QUEST PATH LAYER ──
   if(layers.quests){
     for(let qi=0;qi<QS.length;qi++){
       const q=QS[qi];
       const isSel=selected&&selected.type==='quest'&&selected.idx===qi;
+      if(!isSel)continue; // Only show the selected quest
       const col=QUEST_COLORS[q.tp]||'#888';
       const pts=q.st.filter(s=>s.x||s.y).map(s=>({x:s.x,y:s.y,t:s.t,tx:s.tx}));
       if(pts.length<1)continue;
@@ -653,6 +666,35 @@ function _render(){
     }
   }
 
+  // ── NODE LAYER (from external data) ──
+  if(layers.nodes && NODES.length > 0){
+    for(let ni=0;ni<NODES.length;ni++){
+      const nd=NODES[ni];
+      if(nd.type==='town' || nd.type==='merchant') continue; // Already shown in town layer
+      const p=worldToScreen(nd.x,nd.y);
+      const isSel=selected&&selected.type==='node'&&selected.idx===ni;
+
+      // Node dot
+      const dotR=isSel?6:4;
+      const col=nd.type==='poi'?'#70a0d0':'#80c080';
+      ovX.fillStyle=isSel?col:col+'90';
+      ovX.beginPath();ovX.arc(p.x,p.y,dotR,0,Math.PI*2);ovX.fill();
+
+      if(isSel){
+        ovX.strokeStyle=col;ovX.lineWidth=2;
+        ovX.beginPath();ovX.arc(p.x,p.y,dotR+3,0,Math.PI*2);ovX.stroke();
+      }
+
+      // Label
+      if(zoom>0.06){
+        ovX.fillStyle=isSel?'rgba(255,255,255,.9)':col+'70';
+        ovX.font=(isSel?'700 ':'600 ')+Math.max(8,Math.min(11,90*zoom))+'px "IBM Plex Sans"';
+        ovX.textAlign='center';
+        ovX.fillText(nd.name,p.x,p.y-dotR-4);
+      }
+    }
+  }
+
   // ── ENEMY LAYER (shows combat locations from quests) ──
   if(layers.enemies){
     // Collect unique combat locations
@@ -718,16 +760,6 @@ function renderMinimap(tl,br){
     mmX.fillStyle=b.c;
     mmX.fillRect(b.x*sx,b.y*sy,b.w*sx,b.h*sy);
   }
-  // Roads
-  mmX.strokeStyle='rgba(200,180,140,.2)';mmX.lineWidth=1;mmX.lineCap='round';
-  for(let r of RD){
-    mmX.beginPath();
-    for(let i=0;i<r.length;i++){
-      if(i===0)mmX.moveTo(r[i][0]*sx,r[i][1]*sy);
-      else mmX.lineTo(r[i][0]*sx,r[i][1]*sy);
-    }
-    mmX.stroke();
-  }
   // Towns
   for(let t of TWN){
     mmX.fillStyle=t.merchant?'#e0a020':'rgba(212,168,67,.6)';
@@ -759,20 +791,14 @@ function renderMinimap(tl,br){
 // HIT TESTING
 // ═══════════════════════════════════════════════════════════
 function hitTest(wx,wy){
-  // Road waypoints (small targets, highest priority when close)
-  for(let ri=0;ri<RD.length;ri++){
-    const rd=RD[ri];
-    for(let pi=0;pi<rd.length;pi++){
-      if(Math.hypot(rd[pi][0]-wx,rd[pi][1]-wy)<40)
-        return{type:'roadpt',idx:ri,ptIdx:pi};
-    }
+  // Nodes first (highest priority — primary editing targets)
+  for(let i=0;i<NODES.length;i++){
+    const nd=NODES[i];
+    if(nd.type==='town'||nd.type==='merchant')continue;
+    if(Math.hypot(nd.x-wx,nd.y-wy)<Math.max(40,nd.radius||45))
+      return{type:'node',idx:i,data:nd};
   }
-  // Towns
-  for(let i=0;i<TWN.length;i++){
-    if(Math.hypot(TWN[i].x-wx,TWN[i].y-wy)<Math.max(40,TWN[i].r||50))
-      return{type:'town',idx:i,data:TWN[i]};
-  }
-  // Quest steps (individual points — draggable)
+  // Quest steps (draggable)
   for(let qi=0;qi<QS.length;qi++){
     const q=QS[qi];
     for(let si=0;si<q.st.length;si++){
@@ -781,23 +807,12 @@ function hitTest(wx,wy){
         return{type:'quest',idx:qi,stepIdx:si,data:q};
     }
   }
-  // Road segments (for selecting the whole road)
-  for(let ri=0;ri<RD.length;ri++){
-    const rd=RD[ri];
-    for(let i=0;i<rd.length-1;i++){
-      const d=distToSegment(wx,wy,rd[i][0],rd[i][1],rd[i+1][0],rd[i+1][1]);
-      if(d<80) return{type:'road',idx:ri};
-    }
+  // Towns
+  for(let i=0;i<TWN.length;i++){
+    if(Math.hypot(TWN[i].x-wx,TWN[i].y-wy)<Math.max(40,TWN[i].r||50))
+      return{type:'town',idx:i,data:TWN[i]};
   }
   return null;
-}
-
-function distToSegment(px,py,x1,y1,x2,y2){
-  const dx=x2-x1, dy=y2-y1;
-  const len2=dx*dx+dy*dy;
-  if(len2===0)return Math.hypot(px-x1,py-y1);
-  let t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/len2));
-  return Math.hypot(px-(x1+t*dx),py-(y1+t*dy));
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -828,11 +843,11 @@ ovC.addEventListener('mousedown',e=>{
         dragging={startX:w.x,startY:w.y,origX:0,origY:0};
         if(hit.type==='town'){
           dragging.origX=TWN[hit.idx].x;dragging.origY=TWN[hit.idx].y;
+        } else if(hit.type==='node'){
+          dragging.origX=NODES[hit.idx].x;dragging.origY=NODES[hit.idx].y;
         } else if(hit.type==='quest'&&hit.stepIdx!=null){
           const s=QS[hit.idx].st[hit.stepIdx];
           dragging.origX=s.x;dragging.origY=s.y;
-        } else if(hit.type==='roadpt'){
-          dragging.origX=RD[hit.idx][hit.ptIdx][0];dragging.origY=RD[hit.idx][hit.ptIdx][1];
         }
       }
       updateSidePanel();
@@ -841,10 +856,6 @@ ovC.addEventListener('mousedown',e=>{
       TWN.push({n:'New Town',x:Math.round(w.x),y:Math.round(w.y),d:'A new settlement.',v:false,r:50});
       selected={type:'town',idx:TWN.length-1};
       updateSidePanel();render();
-    } else if(mode==='road'){
-      if(!roadBuilding)roadBuilding=[];
-      roadBuilding.push([Math.round(w.x),Math.round(w.y)]);
-      render();
     } else if(mode==='quest'){
       // Place a quest point marker — for reference
       // Just select nearest quest and show it
@@ -879,14 +890,14 @@ ovC.addEventListener('mousemove',e=>{
       TWN[selected.idx].x=Math.round(dragging.origX+dx);
       TWN[selected.idx].y=Math.round(dragging.origY+dy);
       updateSidePanel();render();return;
+    } else if(selected.type==='node'){
+      NODES[selected.idx].x=Math.round(dragging.origX+dx);
+      NODES[selected.idx].y=Math.round(dragging.origY+dy);
+      updateSidePanel();render();return;
     } else if(selected.type==='quest'&&selected.stepIdx!=null){
       const s=QS[selected.idx].st[selected.stepIdx];
       s.x=Math.round(dragging.origX+dx);
       s.y=Math.round(dragging.origY+dy);
-      updateSidePanel();render();return;
-    } else if(selected.type==='roadpt'){
-      RD[selected.idx][selected.ptIdx][0]=Math.round(dragging.origX+dx);
-      RD[selected.idx][selected.ptIdx][1]=Math.round(dragging.origY+dy);
       updateSidePanel();render();return;
     }
   }
@@ -902,21 +913,17 @@ ovC.addEventListener('mousemove',e=>{
       hi.querySelector('.hi-name').textContent=TWN[hit.idx].n;
       hi.querySelector('.hi-sub').textContent=TWN[hit.idx].d||'';
       hi.querySelector('.hi-coord').textContent=TWN[hit.idx].x+', '+TWN[hit.idx].y+(TWN[hit.idx].merchant?' (merchant)':'');
+    } else if(hit.type==='node'){
+      hi.querySelector('.hi-name').textContent=hit.data.name;
+      hi.querySelector('.hi-sub').textContent=hit.data.description||'';
+      hi.querySelector('.hi-coord').textContent=hit.data.x+', '+hit.data.y+' ('+hit.data.type+')';
     } else if(hit.type==='quest'){
       hi.querySelector('.hi-name').textContent='['+hit.data.tp+'] '+hit.data.n;
       hi.querySelector('.hi-sub').textContent='Lv'+hit.data.lr+' — '+hit.data.ds;
       hi.querySelector('.hi-coord').textContent='Reward: '+hit.data.rw.e+' XP, '+hit.data.rw.g+' Gold';
-    } else if(hit.type==='roadpt'){
-      hi.querySelector('.hi-name').textContent='Road #'+(hit.idx+1)+' — Point '+(hit.ptIdx+1);
-      hi.querySelector('.hi-sub').textContent='Drag to move this waypoint';
-      hi.querySelector('.hi-coord').textContent=RD[hit.idx][hit.ptIdx][0]+', '+RD[hit.idx][hit.ptIdx][1];
-    } else if(hit.type==='road'){
-      hi.querySelector('.hi-name').textContent='Road #'+(hit.idx+1);
-      hi.querySelector('.hi-sub').textContent=RD[hit.idx].length+' waypoints';
-      hi.querySelector('.hi-coord').textContent='';
     }
     hovered=hit;
-    ovC.style.cursor=(hit.type==='town'||hit.type==='quest'||hit.type==='roadpt')?'move':'pointer';
+    ovC.style.cursor=(hit.type==='town'||hit.type==='quest'||hit.type==='node')?'move':'pointer';
   } else {
     hi.style.display='none';
     hovered=null;
@@ -934,15 +941,6 @@ ovC.addEventListener('mouseleave',()=>{
 });
 ovC.addEventListener('contextmenu',e=>{
   e.preventDefault();
-  if(mode==='road'&&roadBuilding&&roadBuilding.length>=2){
-    // Finish road
-    RD.push([...roadBuilding]);
-    selected={type:'road',idx:RD.length-1};
-    roadBuilding=null;
-    updateSidePanel();render();
-  } else if(mode==='road'){
-    roadBuilding=null;render();
-  }
 });
 
 ovC.addEventListener('wheel',e=>{
@@ -977,17 +975,13 @@ document.addEventListener('keydown',e=>{
   if(e.key==='g'||e.key==='G')toggleLayer('grid');
   if(e.key==='Tab'){e.preventDefault();toggleSide();}
   if(e.key==='Escape'){
-    selected=null;roadBuilding=null;setMode('select');
+    selected=null;setMode('select');
     updateSidePanel();render();
   }
   if(e.key==='Delete'&&selected){
     if(selected.type==='town'){
       if(confirm('Delete town "'+TWN[selected.idx].n+'"?')){
         TWN.splice(selected.idx,1);selected=null;updateSidePanel();render();
-      }
-    } else if(selected.type==='road'){
-      if(confirm('Delete road #'+(selected.idx+1)+'?')){
-        RD.splice(selected.idx,1);selected=null;updateSidePanel();render();
       }
     }
   }
@@ -1001,7 +995,6 @@ document.addEventListener('keyup',e=>{
 // ═══════════════════════════════════════════════════════════
 function setMode(m){
   mode=m;
-  if(m!=='road')roadBuilding=null;
   document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));
   ovC.style.cursor=m==='select'?'default':'crosshair';
   render();
@@ -1054,7 +1047,6 @@ function buildWorldPanel(){
   h+='Content area: <span style="color:var(--tx)">6400 x 5200</span><br>';
   h+='Biomes: <span style="color:var(--tx)">'+BIO.length+'</span><br>';
   h+='Towns: <span style="color:var(--tx)">'+TWN.length+'</span><br>';
-  h+='Roads: <span style="color:var(--tx)">'+RD.length+'</span><br>';
   h+='Quests: <span style="color:var(--tx)">'+QS.length+'</span> (M:'+QS.filter(q=>q.tp==='M').length+' S:'+QS.filter(q=>q.tp==='S').length+' B:'+QS.filter(q=>q.tp==='B').length+' G:'+QS.filter(q=>q.tp==='G').length+')<br>';
   h+='Enemy types: <span style="color:var(--tx)">'+ET.length+'</span><br>';
   h+='Player spawn: <span style="color:var(--tx)">900, 2600</span>';
@@ -1148,17 +1140,34 @@ function buildEntityPanel(){
     h+='</div>';
   }
 
+  // Selected node details
+  if(selected&&selected.type==='node'){
+    const nd=NODES[selected.idx];
+    h+='<div class="sec-hd">Edit Node</div>';
+    h+='<div style="padding:6px;font-size:12px;">';
+    h+='<label style="display:block;margin:4px 0;color:var(--tx2)">ID: <span style="color:var(--tx);font-family:var(--mn)">'+escHtml(nd.id)+'</span></label>';
+    h+='<label style="display:block;margin:4px 0;color:var(--tx2)">Name<br><input data-field="node-name" value="'+escHtml(nd.name)+'" style="width:100%;background:rgba(0,0,0,.3);border:1px solid var(--bd);color:var(--tx);padding:4px 8px;border-radius:4px;font-family:var(--fn);font-size:12px;margin-top:2px;"></label>';
+    h+='<label style="display:block;margin:4px 0;color:var(--tx2)">Description<br><input data-field="node-desc" value="'+escHtml(nd.description||'')+'" style="width:100%;background:rgba(0,0,0,.3);border:1px solid var(--bd);color:var(--tx);padding:4px 8px;border-radius:4px;font-family:var(--fn);font-size:12px;margin-top:2px;"></label>';
+    h+='<div style="display:flex;gap:8px;margin:4px 0">';
+    h+='<label style="flex:1;color:var(--tx2)">X<br><input data-field="node-x" type="number" value="'+nd.x+'" style="width:100%;background:rgba(0,0,0,.3);border:1px solid var(--bd);color:var(--tx);padding:4px 8px;border-radius:4px;font-family:var(--mn);font-size:12px;margin-top:2px;"></label>';
+    h+='<label style="flex:1;color:var(--tx2)">Y<br><input data-field="node-y" type="number" value="'+nd.y+'" style="width:100%;background:rgba(0,0,0,.3);border:1px solid var(--bd);color:var(--tx);padding:4px 8px;border-radius:4px;font-family:var(--mn);font-size:12px;margin-top:2px;"></label>';
+    h+='<label style="flex:1;color:var(--tx2)">Radius<br><input data-field="node-r" type="number" value="'+(nd.radius||45)+'" style="width:100%;background:rgba(0,0,0,.3);border:1px solid var(--bd);color:var(--tx);padding:4px 8px;border-radius:4px;font-family:var(--mn);font-size:12px;margin-top:2px;"></label>';
+    h+='</div>';
+    h+='<div style="margin:4px 0;color:var(--tx2)">Type: <span style="color:var(--tx)">'+nd.type+'</span></div>';
+    h+='</div>';
+  }
+
   // Legend
   h+='<div class="sec-hd">Legend</div>';
   h+='<div class="legend">';
   h+='<div class="legend-item"><div class="legend-dot" style="background:#d4a843"></div>Town</div>';
   h+='<div class="legend-item"><div class="legend-dot" style="background:#e0a020"></div>Merchant</div>';
   h+='<div class="legend-item"><div class="legend-dot" style="background:#fff"></div>Spawn</div>';
-  h+='<div class="legend-item"><div class="legend-line" style="background:rgba(200,180,140,.5)"></div>Road</div>';
   h+='<div class="legend-item"><div class="legend-dot" style="background:#e0e0e0"></div>Main Q</div>';
   h+='<div class="legend-item"><div class="legend-dot" style="background:#5080b0"></div>Side Q</div>';
   h+='<div class="legend-item"><div class="legend-dot" style="background:#c04040"></div>Bounty</div>';
   h+='<div class="legend-item"><div class="legend-dot" style="background:#5a9a4a"></div>Gather</div>';
+  h+='<div class="legend-item"><div class="legend-dot" style="background:#70a0d0"></div>POI Node</div>';
   h+='</div>';
 
   return h;
@@ -1174,6 +1183,15 @@ function handleFieldChange(e){
     if(f==='town-x')t.x=parseInt(e.target.value)||0;
     if(f==='town-y')t.y=parseInt(e.target.value)||0;
     if(f==='town-r')t.r=parseInt(e.target.value)||50;
+    render();
+  }
+  if(selected.type==='node'){
+    const nd=NODES[selected.idx];
+    if(f==='node-name')nd.name=e.target.value;
+    if(f==='node-desc')nd.description=e.target.value;
+    if(f==='node-x')nd.x=parseInt(e.target.value)||0;
+    if(f==='node-y')nd.y=parseInt(e.target.value)||0;
+    if(f==='node-r')nd.radius=parseInt(e.target.value)||45;
     render();
   }
 }
@@ -1219,12 +1237,17 @@ function doExport(){
   }
   out+='];\n\n';
 
-  // Roads
-  out+='const RD=[\n';
-  for(let r of RD){
-    out+='  ['+r.map(p=>'['+p[0]+','+p[1]+']').join(',')+'],\n';
-  }
-  out+='];\n';
+  // Export nodes.json content
+  out+='// ═══ NODES JSON ═══\n';
+  out+='// Save this as data/nodes.json\n';
+  const nodesJson = JSON.stringify({nodes: NODES}, null, 2);
+  out+=nodesJson+'\n\n';
+
+  // Export quests.json content
+  out+='// ═══ QUESTS JSON ═══\n';
+  out+='// Save this as data/quests.json\n';
+  const questsJson = JSON.stringify({quests: QUESTS_DATA}, null, 2);
+  out+=questsJson+'\n';
 
   document.getElementById('exportArea').value=out;
   document.getElementById('modal').classList.remove('h');
@@ -1241,11 +1264,124 @@ function copyExport(){
 function closeModal(){document.getElementById('modal').classList.add('h');}
 
 // ═══════════════════════════════════════════════════════════
+// IMPORT QUEST
+// ═══════════════════════════════════════════════════════════
+function openImportQuest(){
+  document.getElementById('import-modal').classList.remove('h');
+  document.getElementById('importArea').value='';
+  document.getElementById('importArea').focus();
+}
+function closeImportModal(){
+  document.getElementById('import-modal').classList.add('h');
+}
+
+function doImportQuest(){
+  const raw = document.getElementById('importArea').value.trim();
+  if(!raw){alert('Please paste quest JSON first.');return;}
+
+  let quest;
+  try {
+    quest = JSON.parse(raw);
+  } catch(e) {
+    alert('Invalid JSON: ' + e.message);
+    return;
+  }
+
+  // Validate required fields
+  if(!quest.id || !quest.name || !quest.steps){
+    alert('Quest JSON must have id, name, and steps fields.');
+    return;
+  }
+
+  // Add new nodes from the quest
+  if(quest.newNodes && quest.newNodes.length > 0){
+    for(let nn of quest.newNodes){
+      // Check if node already exists
+      if(!NODES.find(n => n.id === nn.id)){
+        NODES.push({
+          id: nn.id,
+          name: nn.name || nn.id,
+          x: nn.x || Math.round(WW/2 + (Math.random()-0.5)*2000),
+          y: nn.y || Math.round(WH/2 + (Math.random()-0.5)*2000),
+          type: nn.type || 'poi',
+          radius: nn.radius || 45,
+          description: nn.description || '',
+          discovered: false
+        });
+      }
+    }
+  }
+
+  // Convert quest steps to old format for QS array compatibility
+  const oldSteps = quest.steps.map(s => {
+    const step = {t: s.type, x: 0, y: 0, tx: s.text || '', en: s.enemy || null, ct: s.count || 0};
+    if(s.node){
+      const node = NODES.find(n => n.id === s.node);
+      if(node){step.x = node.x; step.y = node.y;}
+    }
+    return step;
+  });
+
+  // Convert dialogue
+  const oldDlg = (quest.dialogue || []).map(d => ({w: d.speaker, t: d.text}));
+
+  // Build the quest object in old format and add to QS
+  const qObj = {
+    id: quest.id,
+    n: quest.name,
+    tp: quest.type || 'S',
+    ch: quest.chapter || 0,
+    ds: quest.description || '',
+    lr: quest.levelReq || 1,
+    st: oldSteps,
+    rw: {e: (quest.rewards||{}).xp || 0, g: (quest.rewards||{}).gold || 0},
+    lore: quest.lore || '',
+    ul: quest.unlocks || [],
+    dlg: oldDlg
+  };
+
+  // Check for duplicate
+  const existingIdx = QS.findIndex(q => q.id === quest.id);
+  if(existingIdx >= 0){
+    if(confirm('Quest "'+quest.id+'" already exists. Replace it?')){
+      QS[existingIdx] = qObj;
+    } else return;
+  } else {
+    QS.push(qObj);
+  }
+
+  // Also add to QUESTS_DATA in new format
+  const newFormatQuest = {...quest};
+  delete newFormatQuest.newNodes;
+  const existingQIdx = QUESTS_DATA.findIndex(q => q.id === quest.id);
+  if(existingQIdx >= 0){
+    QUESTS_DATA[existingQIdx] = newFormatQuest;
+  } else {
+    QUESTS_DATA.push(newFormatQuest);
+  }
+
+  closeImportModal();
+
+  // Select the new quest and zoom to it
+  const qi = QS.findIndex(q => q.id === quest.id);
+  if(qi >= 0){
+    selected = {type:'quest', idx: qi};
+    const pts = QS[qi].st.filter(s => s.x || s.y);
+    if(pts.length > 0) panToWorld(pts[0].x, pts[0].y);
+  }
+
+  updateSidePanel();
+  render();
+  alert('Quest "'+quest.name+'" imported successfully! Drag nodes to position them.');
+}
+
+// ═══════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════
 resize();
 fitView();
 updateSidePanel();
+loadExternalData();
 </script>
 </body>
 </html>
